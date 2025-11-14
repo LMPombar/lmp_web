@@ -212,7 +212,7 @@ export default {
   methods: {
     typeWelcomeMessage() {
       let i = 0
-      const speed = 30
+      const speed = 10
       const typeWriter = () => {
         if (i < this.welcomeMessage.length) {
           this.typedWelcome += this.welcomeMessage.charAt(i)
