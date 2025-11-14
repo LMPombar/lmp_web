@@ -44,7 +44,7 @@
                   <span class="command">{{ entry.command }}</span>
                   <span v-if="isTypingCommand && index === commandHistory.length - 1" class="typing-cursor">_</span>
                 </div>
-                <div v-if="entry.output" class="command-output" v-html="entry.output"></div>
+                <div v-if="entry.output" class="command-output" v-html="formatOutput(entry.output)"></div>
               </div>
             </div>
 
@@ -502,7 +502,19 @@ export default {
         const content = this.$refs.terminalContent;
         content.scrollTop = content.scrollHeight;
       });
-    }
+    },
+    
+    formatOutput(output) {
+      // Si es un bloque HTML completo (div, pre, etc.), no lo toques
+      if (typeof output === 'string' && (
+          output.trim().startsWith('<div') ||
+          output.trim().startsWith('<pre')
+        )) {
+        return output;
+      }
+      // Para cualquier otro caso (incluye <span>), convierte \n en <br>
+      return output.replace(/\n/g, '<br>');
+    },
   }
 }
 </script>
