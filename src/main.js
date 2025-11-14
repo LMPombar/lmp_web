@@ -8,7 +8,7 @@ import Projects from './views/Projects.vue'
 import Contact from './views/Contact.vue'
 
 const routes = [
-  { path: '/', name: 'Home', component: Home },
+  { path: '/', name: 'Home', component: TerminalHome },
   { path: '/terminal', name: 'Terminal', component: TerminalHome },
   { path: '/about', name: 'About', component: About },
   { path: '/projects', name: 'Projects', component: Projects },
