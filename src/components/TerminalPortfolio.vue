@@ -104,21 +104,21 @@
 import TerminalSidebar from './Sidebar/TerminalSidebar.vue'
 
 export default {
-    name: 'TerminalPortfolio',
-    components: { TerminalSidebar },
-    data() {
-        return {
-            showWelcome: true,
-            isGUIMode: true,
-            showHelp: false,
-            currentCommand: '',
-            currentPrompt: 'laura@dev-portfolio:~$',
-            currentPath: '~',
-            commandHistory: [],
-            commandHistoryIndex: -1,
-            typedWelcome: '',
+  name: 'TerminalPortfolio',
+  components: { TerminalSidebar },
+  data() {
+    return {
+      showWelcome: true,
+      isGUIMode: true,
+      showHelp: false,
+      currentCommand: '',
+      currentPrompt: 'laura@dev-portfolio:~$',
+      currentPath: '~',
+      commandHistory: [],
+      commandHistoryIndex: -1,
+      typedWelcome: '',
 
-            asciiArt: `
+      asciiArt: `
  █     █░▓█████  ██▓     ▄████▄   ▒█████   ███▄ ▄███▓▓█████  ▐██▌
 ▓█░ █ ░█░▓█   ▀ ▓██▒    ▒██▀ ▀█  ▒██▒  ██▒▓██▒▀█▀ ██▒▓█   ▀  ▐██▌
 ▒█░ █ ░█ ▒███   ▒██░    ▒▓█    ▄ ▒██░  ██▒▓██    ▓██░▒███    ▐██▌
@@ -131,313 +131,311 @@ export default {
                         ░                                        
 `,
 
-            welcomeMessage: '¡Bienvenidos a mi portfolio digital! 👩‍💻\nSoy Laura, Backend Developer con interés en DevOps, IA y Frontend.\nEscribe "help" para ver comandos disponibles o usa los botones. 🚀',
+      welcomeMessage: '¡Bienvenidos a mi portfolio digital! 👩‍💻\nSoy Laura, Backend Developer con interés en DevOps, IA y Frontend.\nEscribe "help" para ver comandos disponibles o usa los botones. 🚀',
 
-            availableCommands: [
-                { name: 'ls [path]', description: 'Lista archivos y directorios' },
-                { name: 'cd <path>', description: 'Cambia de directorio' },
-                { name: 'cat <file>', description: 'Muestra el contenido de un archivo' },
-                { name: 'pwd', description: 'Muestra el directorio actual' },
-                { name: 'whoami', description: 'Información sobre mí' },
-                { name: 'ps aux', description: 'Muestra mis skills/tecnologías' },
-                { name: 'history', description: 'Historial de comandos' },
-                { name: 'clear', description: 'Limpia la pantalla' },
-                { name: 'mail', description: 'Abrir formulario de contacto' },
-                { name: 'tree', description: 'Estructura del portfolio' },
-                { name: 'neofetch', description: 'Info del sistema (sobre mí)' }
-            ],
+      availableCommands: [
+          { name: 'ls [path]', description: 'Lista archivos y directorios' },
+          { name: 'cd <path>', description: 'Cambia de directorio' },
+          { name: 'cat <file>', description: 'Muestra el contenido de un archivo' },
+          { name: 'pwd', description: 'Muestra el directorio actual' },
+          { name: 'whoami', description: 'Información sobre mí' },
+          { name: 'ps aux', description: 'Muestra mis skills/tecnologías' },
+          { name: 'history', description: 'Historial de comandos' },
+          { name: 'clear', description: 'Limpia la pantalla' },
+          { name: 'mail', description: 'Abrir formulario de contacto' },
+          { name: 'tree', description: 'Estructura del portfolio' },
+          { name: 'neofetch', description: 'Info del sistema (sobre mí)' }
+      ],
 
-            fileSystem: {
-                '~': {
-                type: 'directory',
-                contents: {
-                    'about.txt': {
-                    type: 'file',
-                    content: `
-            === SOBRE MÍ ===
+      fileSystem: {
+          '~': {
+          type: 'directory',
+          contents: {
+              'about.txt': {
+              type: 'file',
+              content: `
+      === SOBRE MÍ ===
 
-            👤 Nombre: Laura
-            🎯 Profesión: Backend Developer
-            🌟 Especialidades: Python, DevOps, IA, Frontend
+      👤 Nombre: Laura
+      🎯 Profesión: Backend Developer
+      🌟 Especialidades: Python, DevOps, IA, Frontend
 
-            📍 Ubicación: España
-            💼 Estado: Disponible para proyectos
-            🎓 Formación: Autodidacta y en constante aprendizaje
+      📍 Ubicación: España
+      💼 Estado: Disponible para proyectos
+      🎓 Formación: Autodidacta y en constante aprendizaje
 
-            🔧 Backend: Python, APIs REST, Bases de datos
-            🚀 DevOps: Docker, CI/CD, Cloud
-            🤖 IA: Machine Learning, análisis de datos
-            🎨 Frontend: Vue.js, JavaScript, CSS (¡aprendiendo!)
+      🔧 Backend: Python, APIs REST, Bases de datos
+      🚀 DevOps: Docker, CI/CD, Cloud
+      🤖 IA: Machine Learning, análisis de datos
+      🎨 Frontend: Vue.js, JavaScript, CSS (¡aprendiendo!)
 
-            💡 Me apasiona resolver problemas complejos y crear soluciones elegantes.
-            🌱 Siempre en búsqueda de nuevos desafíos y tecnologías.
-                    `
-                    },
-                    'skills.json': {
-                    type: 'file',
-                    content: JSON.stringify({
-                        backend: {
-                        python: 90,
-                        apis: 85,
-                        databases: 80
-                        },
-                        devops: {
-                        docker: 85,
-                        ci_cd: 80,
-                        cloud: 75
-                        },
-                        ai: {
-                        machine_learning: 80,
-                        data_analysis: 75
-                        },
-                        frontend: {
-                        vue_js: 70,
-                        javascript: 75,
-                        css: 70
-                        }
-                    }, null, 2)
-                    },
-                    'projects': {
-                    type: 'directory',
-                    contents: {
-                        'ai-chatbot.py': { type: 'file', executable: true },
-                        'api-microservice.py': { type: 'file', executable: true },
-                        'devops-pipeline.yml': { type: 'file' },
-                        'vue-portfolio.js': { type: 'file', executable: true }
-                    }
-                    },
-                    'contact.sh': {
-                    type: 'file',
-                    executable: true,
-                    content: 'script para contactar'
-                    }
-                }
-                }
-            }
-        }
-    },
+      💡 Me apasiona resolver problemas complejos y crear soluciones elegantes.
+      🌱 Siempre en búsqueda de nuevos desafíos y tecnologías.
+              `
+              },
+              'skills.json': {
+              type: 'file',
+              content: JSON.stringify({
+                  backend: {
+                  python: 90,
+                  apis: 85,
+                  databases: 80
+                  },
+                  devops: {
+                  docker: 85,
+                  ci_cd: 80,
+                  cloud: 75
+                  },
+                  ai: {
+                  machine_learning: 80,
+                  data_analysis: 75
+                  },
+                  frontend: {
+                  vue_js: 70,
+                  javascript: 75,
+                  css: 70
+                  }
+              }, null, 2)
+              },
+              'projects': {
+              type: 'directory',
+              contents: {
+                  'ai-chatbot.py': { type: 'file', executable: true },
+                  'api-microservice.py': { type: 'file', executable: true },
+                  'devops-pipeline.yml': { type: 'file' },
+                  'vue-portfolio.js': { type: 'file', executable: true }
+              }
+              },
+              'contact.sh': {
+              type: 'file',
+              executable: true,
+              content: 'script para contactar'
+              }
+          }
+          }
+      },
 
-    mounted() {
-        this.typeWelcomeMessage()
-        this.focusInput()
-        this.addInitialCommands()
-    },
-
-    methods: {
-        typeWelcomeMessage() {
-            let i = 0
-            const speed = 10
-            const typeWriter = () => {
-            if (i < this.welcomeMessage.length) {
-                this.typedWelcome += this.welcomeMessage.charAt(i)
-                i++
-                setTimeout(typeWriter, speed)
-            }
-            }
-            setTimeout(typeWriter, 1000)
-        },
-
-        addInitialCommands() {
-            setTimeout(() => {
-            this.commandHistory.push({
-                prompt: 'laura@dev-portfolio:~$',
-                command: 'neofetch',
-                output: this.executeNeofetch()
-            })
-            this.scrollToBottom()
-            }, 3000)
-        },
-
-        executeCommand() {
-            if (!this.currentCommand.trim()) return
-
-            const command = this.currentCommand.trim()
-            this.commandHistory.push({
-            prompt: this.currentPrompt,
-            command: command,
-            output: this.processCommand(command)
-            })
-
-            this.currentCommand = ''
-            this.commandHistoryIndex = -1
-            this.scrollToBottom()
-        },
-
-        executeQuickCommand(command) {
-            this.currentCommand = command
-            this.executeCommand()
-        },
-
-        processCommand(command) {
-            const parts = command.split(' ')
-            const cmd = parts[0]
-            const args = parts.slice(1)
-
-            switch (cmd) {
-            case 'ls':
-                return this.listDirectory(args[0] || this.currentPath)
-            case 'cat':
-                return this.showFileContent(args[0])
-            case 'cd':
-                return this.changeDirectory(args[0])
-            case 'pwd':
-                return this.currentPath
-            case 'whoami':
-                return 'laura\nBackend Developer | DevOps Enthusiast | IA Explorer'
-            case 'clear':
-                this.commandHistory = []
-                return ''
-            case 'help':
-                return this.showHelp()
-            case 'ps':
-                return this.showProcesses()
-            case 'neofetch':
-                return this.executeNeofetch()
-            case 'tree':
-                return this.showTree()
-            case 'history':
-                return this.showHistory()
-            case 'mail':
-                this.$emit('navigate-to', 'contact')
-                return 'Abriendo formulario de contacto... 📧'
-            default:
-                return `bash: ${cmd}: command not found\nEscribe 'help' para ver comandos disponibles.`
-            }
-        },
-
-        listDirectory(path = this.currentPath) {
-            const dir = this.getDirectory(path)
-            if (!dir) return `ls: cannot access '${path}': No such file or directory`
-
-            let output = ''
-            for (const [name, item] of Object.entries(dir.contents)) {
-            const prefix = item.type === 'directory' ? 'd' : '-'
-            const executable = item.executable ? '*' : ' '
-            const color = item.type === 'directory' ? 'blue' : (item.executable ? 'green' : 'white')
-            output += `${prefix}rwxr-xr-x 1 laura laura 4096 Nov 14 2025 <span style="color: ${color}">${name}${executable}</span>\n`
-            }
-            return output
-        },
-
-        showFileContent(filename) {
-            if (!filename) return 'cat: missing file operand'
-            
-            const file = this.getFile(filename)
-            if (!file) return `cat: ${filename}: No such file or directory`
-            
-            if (file.type === 'directory') return `cat: ${filename}: Is a directory`
-            
-            return file.content || `Content of ${filename}`
-        },
-
-        executeNeofetch() {
-            return `
-        <div class="neofetch">
-        <span style="color: #61dafb">                    -\`               </span><span style="color: #98d8c8"> laura@dev-portfolio</span>
-        <span style="color: #61dafb">                   .o+\`               </span><span style="color: #98d8c8"> ──────────────────────</span>
-        <span style="color: #61dafb">                  \`ooo/               </span><span style="color: #98d8c8"> OS:</span> Portfolio Linux
-        <span style="color: #61dafb">                 \`+oooo:              </span><span style="color: #98d8c8"> Host:</span> Backend Developer
-        <span style="color: #61dafb">                \`+oooooo:             </span><span style="color: #98d8c8"> Kernel:</span> Python 3.11
-        <span style="color: #61dafb">                -+oooooo+:            </span><span style="color: #98d8c8"> Uptime:</span> 5+ años coding
-        <span style="color: #61dafb">              \`/:-:++oooo+:           </span><span style="color: #98d8c8"> Packages:</span> Docker, FastAPI, Vue
-        <span style="color: #61dafb">             \`/++++/+++++++:          </span><span style="color: #98d8c8"> Shell:</span> zsh, bash
-        <span style="color: #61dafb">            \`/++++++++++++++:         </span><span style="color: #98d8c8"> IDE:</span> VS Code
-        <span style="color: #61dafb">           \`/+++ooooooooooooo/\`       </span><span style="color: #98d8c8"> CPU:</span> Problem Solver
-        <span style="color: #61dafb">          ./ooosssso++osssssso+\`      </span><span style="color: #98d8c8"> GPU:</span> Creative Thinking
-        <span style="color: #61dafb">         .oossssso-\`\`\`\`/ossssss+\`     </span><span style="color: #98d8c8"> Memory:</span> ∞ curiosidad
-        </div>`
-        },
-
-        showProcesses() {
-            return `
-        USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
-        laura     1001 85.2  15.3  2048  1024 pts/0    R+   09:00   2:30 python
-        laura     1002 75.0  12.1  1536   768 pts/1    S    09:15   1:45 docker
-        laura     1003 68.3  10.2  1280   512 pts/2    S    09:30   1:20 vue
-        laura     1004 45.1   8.4  1024   256 pts/3    S    10:00   0:45 devops
-        laura     1005 32.7   6.1   768   128 pts/4    S    10:30   0:30 ai-ml
-            `
-        },
-
-        showTree() {
-            return `
-        📁 laura@dev-portfolio:~
-        ├── 📄 about.txt
-        ├── 📄 skills.json
-        ├── 📄 contact.sh*
-        └── 📁 projects/
-        ├── 🐍 ai-chatbot.py*
-        ├── 🐍 api-microservice.py*
-        ├── 📄 devops-pipeline.yml
-        └── 🟨 vue-portfolio.js*
-
-        1 directory, 6 files
-            `
-        },
-
-        showHistory() {
-            return this.commandHistory.map((entry, index) => 
-            `${index + 1}  ${entry.command}`
-            ).join('\n')
-        },
-
-        getDirectory(path) {
-            // Simplificado para el ejemplo
-            return this.fileSystem[path] || this.fileSystem['~']
-        },
-
-        getFile(filename) {
-            const currentDir = this.getDirectory(this.currentPath)
-            return currentDir?.contents?.[filename]
-        },
-
-        autocomplete() {
-            // Implementar autocompletado básico
-            const commands = this.availableCommands.map(cmd => cmd.name.split(' ')[0])
-            const matches = commands.filter(cmd => cmd.startsWith(this.currentCommand))
-            if (matches.length === 1) {
-            this.currentCommand = matches[0]
-            }
-        },
-
-        previousCommand() {
-            if (this.commandHistoryIndex < this.commandHistory.length - 1) {
-            this.commandHistoryIndex++
-            this.currentCommand = this.commandHistory[this.commandHistory.length - 1 - this.commandHistoryIndex].command
-            }
-        },
-
-        nextCommand() {
-            if (this.commandHistoryIndex > 0) {
-            this.commandHistoryIndex--
-            this.currentCommand = this.commandHistory[this.commandHistory.length - 1 - this.commandHistoryIndex].command
-            } else if (this.commandHistoryIndex === 0) {
-            this.commandHistoryIndex = -1
-            this.currentCommand = ''
-            }
-        },
-
-        toggleHelp() {
-            this.showHelp = !this.showHelp
-        },
-
-        toggleGUIMode() {
-            this.isGUIMode = !this.isGUIMode
-        },
-
-        focusInput() {
-            this.$nextTick(() => {
-            this.$refs.commandInput?.focus()
-            })
-        },
-
-        scrollToBottom() {
-            this.$nextTick(() => {
-            const content = this.$refs.terminalContent
-            content.scrollTop = content.scrollHeight
-            })
-        }
+      initialized: false
     }
+  },
+
+  mounted() {
+    this.typeWelcomeMessage()
+    this.focusInput()
+    this.addInitialCommands()
+  },
+
+  methods: {
+    typeWelcomeMessage() {
+      if (this.initialized) return;
+      let i = 0;
+      const speed = 10;
+      const typeWriter = () => {
+        if (i < this.welcomeMessage.length) {
+          this.typedWelcome += this.welcomeMessage.charAt(i);
+          i++;
+          setTimeout(typeWriter, speed);
+        }
+      };
+      setTimeout(typeWriter, 1000);
+      this.initialized = true;
+    },
+
+    addInitialCommands() {
+      setTimeout(() => {
+      this.commandHistory.push({
+          prompt: 'laura@dev-portfolio:~$',
+          command: 'neofetch',
+          output: this.executeNeofetch()
+      });
+      this.scrollToBottom();
+      }, 3000);
+    },
+
+    executeCommand() {
+      if (!this.currentCommand.trim()) return
+
+      const command = this.currentCommand.trim()
+      this.commandHistory.push({
+      prompt: this.currentPrompt,
+      command: command,
+      output: this.processCommand(command)
+      })
+
+      this.currentCommand = '';
+      this.commandHistoryIndex = -1;
+      this.scrollToBottom();
+    },
+
+    executeQuickCommand(command) {
+      this.currentCommand = command;
+      this.executeCommand();
+    },
+
+    processCommand(command) {
+        const parts = command.split(' ')
+        const cmd = parts[0]
+        const args = parts.slice(1)
+
+        switch (cmd) {
+        case 'ls':
+            return this.listDirectory(args[0] || this.currentPath)
+        case 'cat':
+            return this.showFileContent(args[0])
+        case 'cd':
+            return this.changeDirectory(args[0])
+        case 'pwd':
+            return this.currentPath
+        case 'whoami':
+            return 'laura\nBackend Developer | DevOps Enthusiast | IA Explorer'
+        case 'clear':
+            this.commandHistory = []
+            return ''
+        case 'help':
+            return this.showHelp()
+        case 'ps':
+            return this.showProcesses()
+        case 'neofetch':
+            return this.executeNeofetch()
+        case 'tree':
+            return this.showTree()
+        case 'history':
+            return this.showHistory()
+        case 'mail':
+            this.$emit('navigate-to', 'contact')
+            return 'Abriendo formulario de contacto... 📧'
+        default:
+            return `bash: ${cmd}: command not found\nEscribe 'help' para ver comandos disponibles.`
+        }
+    },
+
+    listDirectory(path = this.currentPath) {
+      const dir = this.getDirectory(path);
+      if (!dir) return `ls: cannot access '${path}': No such file or directory`;
+
+      let output = '';
+      for (const [name, item] of Object.entries(dir.contents)) {
+        const prefix = item.type === 'directory' ? 'd' : '-';
+        const executable = item.executable ? '*' : ' ';
+        const color = item.type === 'directory' ? 'blue' : (item.executable ? 'green' : 'white');
+        output += `${prefix}rwxr-xr-x 1 laura laura 4096 Nov 14 2025 <span style="color: ${color}">${name}${executable}</span>\n`;
+      }
+      return output;
+    },
+
+    showFileContent(filename) {
+      if (!filename) return 'cat: missing file operand';
+
+      const file = this.getFile(filename);
+      if (!file) return `cat: ${filename}: No such file or directory`;
+
+      if (file.type === 'directory') return `cat: ${filename}: Is a directory`;
+
+      return file.content || `Content of ${filename}`;
+    },
+
+    executeNeofetch() {
+        return `
+    <div class="neofetch">
+    <span style="color: #61dafb">                    -\`               </span><span style="color: #98d8c8"> laura@dev-portfolio</span>
+    <span style="color: #61dafb">                   .o+\`               </span><span style="color: #98d8c8"> ──────────────────────</span>
+    <span style="color: #61dafb">                  \`ooo/               </span><span style="color: #98d8c8"> OS:</span> Portfolio Linux
+    <span style="color: #61dafb">                 \`+oooo:              </span><span style="color: #98d8c8"> Host:</span> Backend Developer
+    <span style="color: #61dafb">                \`+oooooo:             </span><span style="color: #98d8c8"> Kernel:</span> Python 3.11
+    <span style="color: #61dafb">                -+oooooo+:            </span><span style="color: #98d8c8"> Uptime:</span> 5+ años coding
+    <span style="color: #61dafb">              \`/:-:++oooo+:           </span><span style="color: #98d8c8"> Packages:</span> Docker, FastAPI, Vue
+    <span style="color: #61dafb">             \`/++++/+++++++:          </span><span style="color: #98d8c8"> Shell:</span> zsh, bash
+    <span style="color: #61dafb">            \`/++++++++++++++:         </span><span style="color: #98d8c8"> IDE:</span> VS Code
+    <span style="color: #61dafb">           \`/+++ooooooooooooo/\`       </span><span style="color: #98d8c8"> CPU:</span> Problem Solver
+    <span style="color: #61dafb">          ./ooosssso++osssssso+\`      </span><span style="color: #98d8c8"> GPU:</span> Creative Thinking
+    <span style="color: #61dafb">         .oossssso-\`\`\`\`/ossssss+\`     </span><span style="color: #98d8c8"> Memory:</span> ∞ curiosidad
+    </div>`
+    },
+
+    showProcesses() {
+        return `
+    USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+    laura     1001 85.2  15.3  2048  1024 pts/0    R+   09:00   2:30 python
+    laura     1002 75.0  12.1  1536   768 pts/1    S    09:15   1:45 docker
+    laura     1003 68.3  10.2  1280   512 pts/2    S    09:30   1:20 vue
+    laura     1004 45.1   8.4  1024   256 pts/3    S    10:00   0:45 devops
+    laura     1005 32.7   6.1   768   128 pts/4    S    10:30   0:30 ai-ml
+        `
+    },
+
+    showTree() {
+        return `
+    📁 laura@dev-portfolio:~
+    ├── 📄 about.txt
+    ├── 📄 skills.json
+    ├── 📄 contact.sh*
+    └── 📁 projects/
+    ├── 🐍 ai-chatbot.py*
+    ├── 🐍 api-microservice.py*
+    ├── 📄 devops-pipeline.yml
+    └── 🟨 vue-portfolio.js*
+
+    1 directory, 6 files
+        `
+    },
+
+    showHistory() {
+      return this.commandHistory.map((entry, index) => 
+        `${index + 1}  ${entry.command}`
+      ).join('\n');
+    },
+
+    getDirectory(path) {
+      return this.fileSystem[path] || this.fileSystem['~'];
+    },
+
+    getFile(filename) {
+      const currentDir = this.getDirectory(this.currentPath);
+      return currentDir?.contents?.[filename];
+    },
+
+    autocomplete() {
+      const commands = this.availableCommands.map(cmd => cmd.name.split(' ')[0]);
+      const matches = commands.filter(cmd => cmd.startsWith(this.currentCommand));
+      if (matches.length === 1) {
+        this.currentCommand = matches[0];
+      }
+    },
+
+    previousCommand() {
+      if (this.commandHistoryIndex < this.commandHistory.length - 1) {
+        this.commandHistoryIndex++;
+        this.currentCommand = this.commandHistory[this.commandHistory.length - 1 - this.commandHistoryIndex].command;
+      }
+    },
+
+    nextCommand() {
+      if (this.commandHistoryIndex > 0) {
+        this.commandHistoryIndex--;
+        this.currentCommand = this.commandHistory[this.commandHistory.length - 1 - this.commandHistoryIndex].command;
+      } else if (this.commandHistoryIndex === 0) {
+        this.commandHistoryIndex = -1;
+        this.currentCommand = '';
+      }
+    },
+
+    toggleHelp() { this.showHelp = !this.showHelp; },
+
+    toggleGUIMode() { this.isGUIMode = !this.isGUIMode; },
+
+    focusInput() {
+      this.$nextTick(() => {
+        this.$refs.commandInput?.focus()
+      });
+    },
+
+    scrollToBottom() {
+      this.$nextTick(() => {
+        const content = this.$refs.terminalContent;
+        content.scrollTop = content.scrollHeight;
+      });
+    }
+  }
 }
 </script>
 
