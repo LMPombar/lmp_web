@@ -44,12 +44,16 @@ export default {
     width: 100%;
     order: -1;
     max-height: 50vh;
+    border-left: none;
+    border-bottom: 2px solid #333;
+    overflow-y: auto;
   }
 }
 
 @media (max-width: 768px) {
   .status-column {
     padding: 10px;
+    max-height: 40vh; /* Menos espacio en móvil para dar más a la terminal */
   }
 }
 

@@ -133,21 +133,19 @@ export default {
 
       welcomeMessage: '¡Bienvenidos a mi portfolio digital! 👩‍💻\nSoy Laura, Backend Developer con interés en DevOps, IA y Frontend.\nEscribe "help" para ver comandos disponibles o usa los botones. 🚀',
 
-      availableCommands: [
-          { name: 'ls [path]', description: 'Lista archivos y directorios' },
-          { name: 'cd <path>', description: 'Cambia de directorio' },
-          { name: 'cat <file>', description: 'Muestra el contenido de un archivo' },
-          { name: 'pwd', description: 'Muestra el directorio actual' },
-          { name: 'whoami', description: 'Información sobre mí' },
-          { name: 'ps aux', description: 'Muestra mis skills/tecnologías' },
-          { name: 'history', description: 'Historial de comandos' },
-          { name: 'clear', description: 'Limpia la pantalla' },
-          { name: 'mail', description: 'Abrir formulario de contacto' },
-          { name: 'tree', description: 'Estructura del portfolio' },
-          { name: 'neofetch', description: 'Info del sistema (sobre mí)' }
-      ],
-
-      fileSystem: {
+            availableCommands: [
+                { name: 'ls [path]', description: 'Lista archivos y directorios' },
+                { name: 'cd <path>', description: 'Cambia de directorio' },
+                { name: 'cat <file>', description: 'Muestra el contenido de un archivo' },
+                { name: 'pwd', description: 'Muestra el directorio actual' },
+                { name: 'whoami', description: 'Información sobre mí' },
+                { name: 'ps aux', description: 'Muestra mis skills/tecnologías' },
+                { name: 'history', description: 'Historial de comandos' },
+                { name: 'clear', description: 'Limpia la pantalla' },
+                { name: 'mail', description: 'Abrir formulario de contacto' },
+                { name: 'tree', description: 'Estructura del portfolio' },
+                { name: 'about', description: 'Resumen completo sobre mí' }
+            ],      fileSystem: {
           '~': {
           type: 'directory',
           contents: {
@@ -245,7 +243,7 @@ export default {
       setTimeout(() => {
       this.commandHistory.push({
           prompt: 'laura@dev-portfolio:~$',
-          command: 'neofetch',
+          command: 'about',
           output: this.executeNeofetch()
       });
       this.scrollToBottom();
@@ -296,6 +294,7 @@ export default {
         case 'ps':
             return this.showProcesses()
         case 'neofetch':
+        case 'about':
             return this.executeNeofetch()
         case 'tree':
             return this.showTree()
@@ -334,25 +333,28 @@ export default {
       return file.content || `Content of ${filename}`;
     },
 
-    executeNeofetch() {
-        return `
-    <div class="neofetch">
-    <span style="color: #61dafb">                    -\`               </span><span style="color: #98d8c8"> laura@dev-portfolio</span>
-    <span style="color: #61dafb">                   .o+\`               </span><span style="color: #98d8c8"> ──────────────────────</span>
-    <span style="color: #61dafb">                  \`ooo/               </span><span style="color: #98d8c8"> OS:</span> Portfolio Linux
-    <span style="color: #61dafb">                 \`+oooo:              </span><span style="color: #98d8c8"> Host:</span> Backend Developer
-    <span style="color: #61dafb">                \`+oooooo:             </span><span style="color: #98d8c8"> Kernel:</span> Python 3.11
-    <span style="color: #61dafb">                -+oooooo+:            </span><span style="color: #98d8c8"> Uptime:</span> 5+ años coding
-    <span style="color: #61dafb">              \`/:-:++oooo+:           </span><span style="color: #98d8c8"> Packages:</span> Docker, FastAPI, Vue
-    <span style="color: #61dafb">             \`/++++/+++++++:          </span><span style="color: #98d8c8"> Shell:</span> zsh, bash
-    <span style="color: #61dafb">            \`/++++++++++++++:         </span><span style="color: #98d8c8"> IDE:</span> VS Code
-    <span style="color: #61dafb">           \`/+++ooooooooooooo/\`       </span><span style="color: #98d8c8"> CPU:</span> Problem Solver
-    <span style="color: #61dafb">          ./ooosssso++osssssso+\`      </span><span style="color: #98d8c8"> GPU:</span> Creative Thinking
-    <span style="color: #61dafb">         .oossssso-\`\`\`\`/ossssss+\`     </span><span style="color: #98d8c8"> Memory:</span> ∞ curiosidad
-    </div>`
-    },
+        executeNeofetch() {
+            return `
+<div class="system-info">
+<span style="color: #00ff88; font-weight: bold;">╭─ LAURA DEV PORTFOLIO ─────────────────────────────────────╮</span>
+<span style="color: #00ff88;">│</span> <span style="color: #ffbd2e;">👤 Desarrolladora:</span> <span style="color: #fff;">Laura</span>                                    <span style="color: #00ff88;">│</span>
+<span style="color: #00ff88;">│</span> <span style="color: #ffbd2e;">🎯 Especialidad:</span>  <span style="color: #fff;">Backend Developer</span>                        <span style="color: #00ff88;">│</span>
+<span style="color: #00ff88;">│</span> <span style="color: #ffbd2e;">📍 Ubicación:</span>     <span style="color: #fff;">España</span>                                   <span style="color: #00ff88;">│</span>
+<span style="color: #00ff88;">│</span> <span style="color: #ffbd2e;">💼 Estado:</span>        <span style="color: #4caf50;">Disponible para proyectos</span>             <span style="color: #00ff88;">│</span>
+<span style="color: #00ff88;">├─ STACK PRINCIPAL ─────────────────────────────────────────┤</span>
+<span style="color: #00ff88;">│</span> <span style="color: #007bff;">🐍 Backend:</span>       <span style="color: #fff;">Python, Django, FastAPI, PostgreSQL</span>     <span style="color: #00ff88;">│</span>
+<span style="color: #00ff88;">│</span> <span style="color: #007bff;">🚀 DevOps:</span>        <span style="color: #fff;">Docker, GitHub Actions, CI/CD, AWS</span>       <span style="color: #00ff88;">│</span>
+<span style="color: #00ff88;">│</span> <span style="color: #007bff;">🤖 IA & Data:</span>     <span style="color: #fff;">Machine Learning, Data Analysis, LLMs</span>   <span style="color: #00ff88;">│</span>
+<span style="color: #00ff88;">│</span> <span style="color: #007bff;">🎨 Frontend:</span>      <span style="color: #fff;">Vue.js, JavaScript, CSS (aprendiendo!)</span>  <span style="color: #00ff88;">│</span>
+<span style="color: #00ff88;">├─ EXPERIENCIA ─────────────────────────────────────────────┤</span>
+<span style="color: #00ff88;">│</span> <span style="color: #ff9800;">⏱️  Años codificando:</span> <span style="color: #fff;">8+ años</span>                           <span style="color: #00ff88;">│</span>
+<span style="color: #00ff88;">│</span> <span style="color: #ff9800;">🎓 Formación:</span>        <span style="color: #fff;">Autodidacta y en constante aprendizaje</span> <span style="color: #00ff88;">│</span>
+<span style="color: #00ff88;">│</span> <span style="color: #ff9800;">🔥 Pasión:</span>           <span style="color: #fff;">Resolver problemas complejos</span>           <span style="color: #00ff88;">│</span>
+<span style="color: #00ff88;">╰───────────────────────────────────────────────────────────╯</span>
 
-    showProcesses() {
+<span style="color: #888; font-style: italic;">💡 Tip: Usa 'cat about.txt' para más detalles o 'ps aux' para ver skills</span>
+</div>`
+        },    showProcesses() {
         return `
     USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
     laura     1001 85.2  15.3  2048  1024 pts/0    R+   09:00   2:30 python
@@ -687,31 +689,68 @@ export default {
   font-family: inherit;
 }
 
-.neofetch {
+.neofetch, .system-info {
   font-family: monospace;
   font-size: 11px;
-  line-height: 1.2;
+  line-height: 1.4;
+  background: rgba(0, 255, 136, 0.03);
+  padding: 10px;
+  border-radius: 4px;
+  border-left: 3px solid #00ff88;
 }
 
 /* Responsive */
 @media (max-width: 1200px) {
   .terminal-layout {
     flex-direction: column;
-    height: auto;
+    height: 100vh; /* Mantener altura completa */
   }
 
   .terminal-column {
     min-height: 50vh;
+    max-height: 50vh; /* Limitar altura para que el scroll funcione */
+    overflow: hidden; /* Asegurar que el contenido no se desborde */
+  }
+  
+  .terminal-window {
+    height: 100%;
+  }
+  
+  .terminal-content {
+    max-height: calc(50vh - 60px); /* Restar altura del header */
+    overflow-y: auto;
   }
 }
 
 @media (max-width: 768px) {
   .terminal-portfolio {
     padding: 0;
+    height: 100vh;
+    overflow: hidden;
+  }
+  
+  .terminal-layout {
+    height: 100vh;
   }
   
   .terminal-column {
     padding: 10px;
+    min-height: 60vh;
+    max-height: 60vh; /* Más espacio para la terminal en móvil */
+  }
+  
+  .terminal-content {
+    max-height: calc(60vh - 80px); /* Ajustar para el header y padding */
+    overflow-y: auto;
+    padding-bottom: 100px; /* Espacio extra para el input */
+  }
+  
+  .input-line {
+    position: sticky;
+    bottom: 0;
+    background: #0a0a0a;
+    padding: 10px 0;
+    margin-bottom: 0;
   }
   
   .ascii-art {

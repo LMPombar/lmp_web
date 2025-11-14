@@ -28,7 +28,7 @@
         </div>
         </div>
         <div class="experience-start">
-        Desde: {{ experienceStartDate.toLocaleDateString('es-ES', { 
+        Trabajando desde: {{ experienceStartDate.toLocaleDateString('es-ES', { 
             year: 'numeric', month: 'long', day: 'numeric' 
         }) }}
         </div>

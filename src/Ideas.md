@@ -4,6 +4,7 @@
 - Trayectoria profesional?? como un arbol de decisiones o algo así.
 - Objetivos a futuro.
 - Proyectos personales o cosas que quiero aprender.
+- Links a mi linkedin, stackoverflow y github
 
 # Ideas About
 
