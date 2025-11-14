@@ -42,6 +42,7 @@
                 <div class="command-line">
                   <span class="prompt">{{ entry.prompt }}</span>
                   <span class="command">{{ entry.command }}</span>
+                  <span v-if="isTypingCommand && index === commandHistory.length - 1" class="typing-cursor">_</span>
                 </div>
                 <div v-if="entry.output" class="command-output" v-html="entry.output"></div>
               </div>
@@ -117,6 +118,7 @@ export default {
       commandHistory: [],
       commandHistoryIndex: -1,
       typedWelcome: '',
+      isTypingCommand: false,
 
       asciiArt: `
  █     █░▓█████  ██▓     ▄████▄   ▒█████   ███▄ ▄███▓▓█████  ▐██▌
@@ -159,13 +161,13 @@ export default {
       🌟 Especialidades: Python, DevOps, IA, Frontend
 
       📍 Ubicación: España
-      💼 Estado: Disponible para proyectos
-      🎓 Formación: Autodidacta y en constante aprendizaje
+      💼 Estado: Trabajando en SoftwareOne
+      🎓 Formación: Universidad de A Coruña, pero en constante aprendizaje
 
       🔧 Backend: Python, APIs REST, Bases de datos
       🚀 DevOps: Docker, CI/CD, Cloud
-      🤖 IA: Machine Learning, análisis de datos
-      🎨 Frontend: Vue.js, JavaScript, CSS (¡aprendiendo!)
+      🤖 IA: Machine Learning, análisis de datos, LLMs
+      🎨 Frontend: JavaScript, Alpine.js, Angular, Vue.js (¡aprendiendo!)
 
       💡 Me apasiona resolver problemas complejos y crear soluciones elegantes.
       🌱 Siempre en búsqueda de nuevos desafíos y tecnologías.
@@ -220,7 +222,7 @@ export default {
   mounted() {
     this.typeWelcomeMessage()
     this.focusInput()
-    this.addInitialCommands()
+    // addInitialCommands() ahora se llama desde typeWelcomeMessage()
   },
 
   methods: {
@@ -233,6 +235,11 @@ export default {
           this.typedWelcome += this.welcomeMessage.charAt(i);
           i++;
           setTimeout(typeWriter, speed);
+        } else {
+          // Cuando termine de escribirse, ejecutar el comando about
+          setTimeout(() => {
+            this.addInitialCommands();
+          }, 1500); // Pausa de 1.5s después del mensaje
         }
       };
       setTimeout(typeWriter, 1000);
@@ -240,14 +247,39 @@ export default {
     },
 
     addInitialCommands() {
-      setTimeout(() => {
+      // Primero mostrar el prompt vacío
       this.commandHistory.push({
           prompt: 'laura@dev-portfolio:~$',
-          command: 'about',
-          output: this.executeNeofetch()
+          command: '',
+          output: ''
       });
       this.scrollToBottom();
-      }, 3000);
+      
+      // Activar cursor de escritura
+      this.isTypingCommand = true;
+      
+      // Simular escritura del comando "about" letra por letra
+      const command = 'about';
+      let i = 0;
+      const typeCommand = () => {
+        if (i < command.length) {
+          this.commandHistory[this.commandHistory.length - 1].command = command.substring(0, i + 1);
+          i++;
+          setTimeout(typeCommand, 120); // 120ms por letra para efecto más realista
+        } else {
+          // Desactivar cursor de escritura
+          this.isTypingCommand = false;
+          
+          // Cuando termine de escribir el comando, mostrar el resultado
+          setTimeout(() => {
+            this.commandHistory[this.commandHistory.length - 1].output = this.executeNeofetch();
+            this.scrollToBottom();
+          }, 300); // Pausa más corta antes de mostrar resultado
+        }
+      };
+      
+      // Empezar a escribir el comando después de una pausa
+      setTimeout(typeCommand, 600);
     },
 
     executeCommand() {
@@ -334,8 +366,7 @@ export default {
     },
 
         executeNeofetch() {
-            return `
-<div class="system-info">
+            return `<div class="system-info">
 <span style="color: #00ff88; font-weight: bold;">╭─ LAURA DEV PORTFOLIO ─────────────────────────────────────╮</span>
 <span style="color: #00ff88;">│</span> <span style="color: #ffbd2e;">👤 Desarrolladora:</span> <span style="color: #fff;">Laura</span>                                    <span style="color: #00ff88;">│</span>
 <span style="color: #00ff88;">│</span> <span style="color: #ffbd2e;">🎯 Especialidad:</span>  <span style="color: #fff;">Backend Developer</span>                        <span style="color: #00ff88;">│</span>
@@ -598,6 +629,16 @@ export default {
 .command {
   color: #ffbd2e;
   margin-left: 5px;
+}
+
+.typing-cursor {
+  color: #00ff88;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
 }
 
 .command-output {
