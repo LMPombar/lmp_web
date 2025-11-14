@@ -10,6 +10,9 @@
             <router-link to="/" class="nav-link" @click="closeMenu">Inicio</router-link>
           </li>
           <li class="nav-item">
+            <router-link to="/terminal" class="nav-link terminal-link" @click="closeMenu">💻 Terminal</router-link>
+          </li>
+          <li class="nav-item">
             <router-link to="/about" class="nav-link" @click="closeMenu">Sobre mí</router-link>
           </li>
           <li class="nav-item">
@@ -88,6 +91,21 @@ export default {
 .nav-link:hover,
 .nav-link.router-link-active {
   color: #007bff;
+}
+
+.terminal-link {
+  background: linear-gradient(45deg, #00ff88, #007bff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: bold;
+}
+
+.terminal-link:hover {
+  background: linear-gradient(45deg, #007bff, #00ff88);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .nav-toggle {
