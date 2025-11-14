@@ -97,36 +97,7 @@
       <!-- Right Column: Status Dashboard -->
       <div class="status-column">
         <!-- Experience Counter -->
-        <div class="status-widget experience-widget">
-          <h3 class="widget-title">👩‍💻 Tiempo de Experiencia</h3>
-          <div class="experience-counter">
-            <div class="experience-item">
-              <span class="experience-number">{{ experienceTime.years }}</span>
-              <span class="experience-label">años</span>
-            </div>
-            <div class="experience-item">
-              <span class="experience-number">{{ experienceTime.months }}</span>
-              <span class="experience-label">meses</span>
-            </div>
-            <div class="experience-item">
-              <span class="experience-number">{{ experienceTime.days }}</span>
-              <span class="experience-label">días</span>
-            </div>
-            <div class="experience-item">
-              <span class="experience-number">{{ experienceTime.hours }}</span>
-              <span class="experience-label">horas</span>
-            </div>
-            <div class="experience-item">
-              <span class="experience-number">{{ experienceTime.minutes }}</span>
-              <span class="experience-label">minutos</span>
-            </div>
-          </div>
-          <div class="experience-start">
-            Desde: {{ experienceStartDate.toLocaleDateString('es-ES', { 
-              year: 'numeric', month: 'long', day: 'numeric' 
-            }) }}
-          </div>
-        </div>
+        <TimeCounter />
 
         <!-- Tech Stack -->
         <div class="status-widget tech-widget">
@@ -216,8 +187,13 @@
 </template>
 
 <script>
+import TimeCounter from './TimeCounter.vue'
+
 export default {
   name: 'TerminalPortfolio',
+  components: {
+    TimeCounter
+  },
   data() {
     return {
       showWelcome: true,
@@ -229,17 +205,6 @@ export default {
       commandHistory: [],
       commandHistoryIndex: -1,
       typedWelcome: '',
-      
-      // Experience tracking
-      experienceStartDate: new Date('2020-01-15'), // Ajusta esta fecha a cuando empezaste
-      experienceTime: {
-        years: 0,
-        months: 0,
-        days: 0,
-        hours: 0,
-        minutes: 0
-      },
-      experienceTimer: null,
       
       // System stats (dynamic)
       systemStats: {
@@ -393,14 +358,7 @@ export default {
     this.typeWelcomeMessage()
     this.focusInput()
     this.addInitialCommands()
-    this.startExperienceTimer()
     this.startSystemStatsAnimation()
-  },
-
-  beforeUnmount() {
-    if (this.experienceTimer) {
-      clearInterval(this.experienceTimer)
-    }
   },
 
   methods: {
@@ -616,28 +574,6 @@ laura     1005 32.7   6.1   768   128 pts/4    S    10:30   0:30 ai-ml
         const content = this.$refs.terminalContent
         content.scrollTop = content.scrollHeight
       })
-    },
-
-    // Experience counter methods
-    startExperienceTimer() {
-      this.updateExperienceTime()
-      this.experienceTimer = setInterval(() => {
-        this.updateExperienceTime()
-      }, 60000) // Update every minute
-    },
-
-    updateExperienceTime() {
-      const now = new Date()
-      const start = this.experienceStartDate
-      const diff = now - start
-
-      const years = Math.floor(diff / (365.25 * 24 * 60 * 60 * 1000))
-      const months = Math.floor((diff % (365.25 * 24 * 60 * 60 * 1000)) / (30.44 * 24 * 60 * 60 * 1000))
-      const days = Math.floor((diff % (30.44 * 24 * 60 * 60 * 1000)) / (24 * 60 * 60 * 1000))
-      const hours = Math.floor((diff % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000))
-      const minutes = Math.floor((diff % (60 * 60 * 1000)) / (60 * 1000))
-
-      this.experienceTime = { years, months, days, hours, minutes }
     },
 
     // System stats animation
@@ -908,43 +844,6 @@ laura     1005 32.7   6.1   768   128 pts/4    S    10:30   0:30 ai-ml
   margin-bottom: 15px;
   padding-bottom: 8px;
   border-bottom: 1px solid #333;
-}
-
-/* Experience Widget */
-.experience-counter {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 15px;
-  margin-bottom: 15px;
-}
-
-.experience-item {
-  text-align: center;
-  background: rgba(0, 255, 136, 0.05);
-  padding: 10px;
-  border-radius: 6px;
-  border: 1px solid rgba(0, 255, 136, 0.2);
-}
-
-.experience-number {
-  display: block;
-  color: #00ff88;
-  font-size: 24px;
-  font-weight: bold;
-  line-height: 1;
-}
-
-.experience-label {
-  color: #888;
-  font-size: 12px;
-  text-transform: uppercase;
-}
-
-.experience-start {
-  color: #666;
-  font-size: 12px;
-  text-align: center;
-  font-style: italic;
 }
 
 /* Tech Widget */
