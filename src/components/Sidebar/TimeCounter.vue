@@ -117,9 +117,9 @@ export default {
 /* Experience Widget */
 .experience-counter {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 15px;
-  margin-bottom: 15px;
+  margin-bottom: 15px !important;
 }
 
 .experience-item {

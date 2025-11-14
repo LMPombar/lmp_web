@@ -652,7 +652,7 @@ export default {
 
 .command-line {
   color: #fff;
-  margin-bottom: 5px;
+  margin-bottom: 5px !important;
 }
 
 .prompt {
@@ -662,7 +662,7 @@ export default {
 
 .command {
   color: #ffbd2e;
-  margin-left: 5px;
+  margin-left: 5px !important;
 }
 
 .typing-cursor {
@@ -677,8 +677,7 @@ export default {
 
 .command-output {
   color: #ccc;
-  margin-left: 0;
-  white-space: pre-line;
+  margin: 20px 0 !important;
   font-family: inherit;
   line-height: 1.4;
 }
@@ -703,7 +702,7 @@ export default {
   font-size: 16px;
   outline: none;
   flex: 1;
-  margin-left: 5px;
+  margin-left: 5px !important;
 }
 
 .command-input::placeholder {
@@ -712,7 +711,7 @@ export default {
 
 .quick-actions {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: row;
   gap: 10px;
   margin: 20px 0;
   padding: 15px;
@@ -722,6 +721,8 @@ export default {
 }
 
 .quick-btn {
+  flex: 1 1 0;
+  width: 100%;
   background: rgba(0, 255, 136, 0.1);
   border: 1px solid rgba(0, 255, 136, 0.3);
   color: #00ff88;
@@ -731,6 +732,7 @@ export default {
   font-family: inherit;
   font-size: 12px;
   transition: all 0.3s;
+  text-align: center;
 }
 
 .quick-btn:hover {
