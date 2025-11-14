@@ -96,21 +96,22 @@ export default {
 </script>
 
 <style scoped> 
+/* Widget base styles - usando CSS Variables del padre */
 .status-widget {
-  background: #1a1a1a;
-  border: 1px solid #333;
-  border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  background: var(--widget-background);
+  border: var(--widget-border);
+  border-radius: var(--widget-border-radius);
+  padding: var(--widget-padding);
+  margin-bottom: var(--widget-margin);
+  box-shadow: var(--widget-shadow);
 }
 
 .widget-title {
-  color: #00ff88;
-  font-size: 16px;
-  margin-bottom: 15px;
+  color: var(--title-color);
+  font-size: var(--title-size);
+  margin-bottom: var(--title-margin);
   padding-bottom: 8px;
-  border-bottom: 1px solid #333;
+  border-bottom: var(--title-border);
 }
 
 /* Experience Widget */
@@ -131,20 +132,20 @@ export default {
 
 .experience-number {
   display: block;
-  color: #00ff88;
+  color: var(--primary-color);
   font-size: 24px;
   font-weight: bold;
   line-height: 1;
 }
 
 .experience-label {
-  color: #888;
+  color: var(--text-muted);
   font-size: 12px;
   text-transform: uppercase;
 }
 
 .experience-start {
-  color: #666;
+  color: var(--text-muted);
   font-size: 12px;
   text-align: center;
   font-style: italic;
