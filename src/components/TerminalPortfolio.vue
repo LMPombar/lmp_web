@@ -49,7 +49,7 @@
             </div>
 
             <!-- Current Input Line -->
-            <div class="input-line">
+            <div v-if="showRealInput" class="input-line">
               <span class="prompt">{{ currentPrompt }}</span>
               <input 
                 v-model="currentCommand"
@@ -64,7 +64,7 @@
             </div>
 
             <!-- Quick Action Buttons (GUI Mode) -->
-            <div v-if="isGUIMode" class="quick-actions">
+            <div v-if="isGUIMode && showRealInput" class="quick-actions">
               <button @click="executeQuickCommand('ls')" class="quick-btn">
                 📁 Explorar
               </button>
@@ -119,6 +119,7 @@ export default {
       commandHistoryIndex: -1,
       typedWelcome: '',
       isTypingCommand: false,
+      showRealInput: false,
 
       asciiArt: `
  █     █░▓█████  ██▓     ▄████▄   ▒█████   ███▄ ▄███▓▓█████  ▐██▌
@@ -135,23 +136,25 @@ export default {
 
       welcomeMessage: '¡Bienvenidos a mi portfolio digital! 👩‍💻\nSoy Laura, Backend Developer con interés en DevOps, IA y Frontend.\nEscribe "help" para ver comandos disponibles o usa los botones. 🚀',
 
-            availableCommands: [
-                { name: 'ls [path]', description: 'Lista archivos y directorios' },
-                { name: 'cd <path>', description: 'Cambia de directorio' },
-                { name: 'cat <file>', description: 'Muestra el contenido de un archivo' },
-                { name: 'pwd', description: 'Muestra el directorio actual' },
-                { name: 'whoami', description: 'Información sobre mí' },
-                { name: 'ps aux', description: 'Muestra mis skills/tecnologías' },
-                { name: 'history', description: 'Historial de comandos' },
-                { name: 'clear', description: 'Limpia la pantalla' },
-                { name: 'mail', description: 'Abrir formulario de contacto' },
-                { name: 'tree', description: 'Estructura del portfolio' },
-                { name: 'about', description: 'Resumen completo sobre mí' }
-            ],      fileSystem: {
-          '~': {
+      availableCommands: [
+        { name: 'ls [path]', description: 'Lista archivos y directorios' },
+        { name: 'cd <path>', description: 'Cambia de directorio' },
+        { name: 'cat <file>', description: 'Muestra el contenido de un archivo' },
+        { name: 'pwd', description: 'Muestra el directorio actual' },
+        { name: 'whoami', description: 'Información sobre mí' },
+        { name: 'ps aux', description: 'Muestra mis skills/tecnologías' },
+        { name: 'history', description: 'Historial de comandos' },
+        { name: 'clear', description: 'Limpia la pantalla' },
+        { name: 'mail', description: 'Abrir formulario de contacto' },
+        { name: 'tree', description: 'Estructura del portfolio' },
+        { name: 'about', description: 'Resumen completo sobre mí' },
+        { name: 'welcome', description: 'Mensaje de bienvenida a la web' }
+      ],
+      fileSystem: {
+        '~': {
           type: 'directory',
           contents: {
-              'about.txt': {
+            'about.txt': {
               type: 'file',
               content: `
       === SOBRE MÍ ===
@@ -171,82 +174,60 @@ export default {
 
       💡 Me apasiona resolver problemas complejos y crear soluciones elegantes.
       🌱 Siempre en búsqueda de nuevos desafíos y tecnologías.
-              `
-              },
-              'skills.json': {
+            ` },
+            'skills.json': {
               type: 'file',
               content: JSON.stringify({
-                  backend: {
+                backend: {
                   python: 90,
                   apis: 85,
                   databases: 80
-                  },
-                  devops: {
+                },
+                devops: {
                   docker: 85,
                   ci_cd: 80,
                   cloud: 75
-                  },
-                  ai: {
-                  machine_learning: 80,
-                  data_analysis: 75
-                  },
-                  frontend: {
+                },
+                ai: {
+                  machine_learning: 50,
+                  data_analysis: 65,
+                  llms: 60
+                },
+                frontend: {
                   vue_js: 70,
                   javascript: 75,
                   css: 70
-                  }
+                }
               }, null, 2)
-              },
-              'projects': {
+            },
+            'projects': {
               type: 'directory',
               contents: {
-                  'ai-chatbot.py': { type: 'file', executable: true },
-                  'api-microservice.py': { type: 'file', executable: true },
-                  'devops-pipeline.yml': { type: 'file' },
-                  'vue-portfolio.js': { type: 'file', executable: true }
+                'ai-chatbot.py': { type: 'file', executable: true },
+                'api-microservice.py': { type: 'file', executable: true },
+                'devops-pipeline.yml': { type: 'file' },
+                'vue-portfolio.js': { type: 'file', executable: true }
               }
-              },
-              'contact.sh': {
+            },
+            'contact.sh': {
               type: 'file',
               executable: true,
               content: 'script para contactar'
-              }
+            }
           }
-          }
-      },
-
-      initialized: false
+        },
+        initialized: false
+      }
     }
   },
 
   mounted() {
-    this.typeWelcomeMessage()
-    this.focusInput()
-    // addInitialCommands() ahora se llama desde typeWelcomeMessage()
+    this.addInitialCommands();
   },
 
   methods: {
-    typeWelcomeMessage() {
-      if (this.initialized) return;
-      let i = 0;
-      const speed = 10;
-      const typeWriter = () => {
-        if (i < this.welcomeMessage.length) {
-          this.typedWelcome += this.welcomeMessage.charAt(i);
-          i++;
-          setTimeout(typeWriter, speed);
-        } else {
-          // Cuando termine de escribirse, ejecutar el comando about
-          setTimeout(() => {
-            this.addInitialCommands();
-          }, 1500); // Pausa de 1.5s después del mensaje
-        }
-      };
-      setTimeout(typeWriter, 1000);
-      this.initialized = true;
-    },
-
     addInitialCommands() {
+      if (this.initialized) return;
       // Primero mostrar el prompt vacío
       this.commandHistory.push({
           prompt: 'laura@dev-portfolio:~$',
@@ -258,8 +239,8 @@ export default {
       // Activar cursor de escritura
       this.isTypingCommand = true;
       
-      // Simular escritura del comando "about" letra por letra
-      const command = 'about';
+      // Simular escritura del comando "welcome" letra por letra
+      const command = 'welcome';
       let i = 0;
       const typeCommand = () => {
         if (i < command.length) {
@@ -272,8 +253,14 @@ export default {
           
           // Cuando termine de escribir el comando, mostrar el resultado
           setTimeout(() => {
-            this.commandHistory[this.commandHistory.length - 1].output = this.executeNeofetch();
+            this.commandHistory[this.commandHistory.length - 1].output = this.executeWelcome();
             this.scrollToBottom();
+            
+            // Mostrar el input real después de que termine de escribirse el welcome
+            setTimeout(() => {
+              this.showRealInput = true;
+              this.focusInput();
+            }, 800);
           }, 300); // Pausa más corta antes de mostrar resultado
         }
       };
@@ -282,15 +269,63 @@ export default {
       setTimeout(typeCommand, 600);
     },
 
-    executeCommand() {
-      if (!this.currentCommand.trim()) return
+    executeWelcome() {
+      // Crear un contenedor para el mensaje que se va escribiendo
+      const containerId = 'welcome-typing-' + Date.now();
+      
+      // Empezar con el ASCII art y un contenedor vacío para el texto
+      let welcomeHTML = `
+        <div class="welcome-output">
+          <div id="${containerId}" class="typing-welcome"></div>
+        </div>
+      `;
+      
+      // Usar setTimeout para empezar la animación después de que se renderice el HTML
+      setTimeout(() => {
+        this.typeWelcomeInOutput(containerId);
+      }, 100);
+      
+      return welcomeHTML;
+    },
+    
+    typeWelcomeInOutput(containerId) {
+      let i = 0;
+      const speed = 10;
+      let typedText = '';
+      
+      const typeWriter = () => {
+        if (i < this.welcomeMessage.length) {
+          typedText += this.welcomeMessage.charAt(i);
+          const element = document.getElementById(containerId);
+          if (element) {
+            element.innerHTML = `<span style="color: #00ff88;">${typedText.replace(/\n/g, '<br>')}</span>`;
+          }
+          i++;
+          setTimeout(typeWriter, speed);
+        } else {
+          // Cuando termine de escribirse, marcar como inicializado
+          if (!this.initialized) {
+            setTimeout(() => {
+              this.showRealInput = true;
+              this.focusInput();
+            }, 800);
+            this.initialized = true;
+          }
+        }
+      };
+      
+      typeWriter();
+    },
 
-      const command = this.currentCommand.trim()
+    executeCommand() {
+      if (!this.currentCommand.trim()) return;
+
+      const command = this.currentCommand.trim();
       this.commandHistory.push({
-      prompt: this.currentPrompt,
-      command: command,
-      output: this.processCommand(command)
-      })
+        prompt: this.currentPrompt,
+        command: command,
+        output: this.processCommand(command)
+      });
 
       this.currentCommand = '';
       this.commandHistoryIndex = -1;
@@ -303,41 +338,43 @@ export default {
     },
 
     processCommand(command) {
-        const parts = command.split(' ')
-        const cmd = parts[0]
-        const args = parts.slice(1)
+      const parts = command.split(' ');
+      const cmd = parts[0];
+      const args = parts.slice(1);
 
-        switch (cmd) {
+      switch (cmd) {
         case 'ls':
-            return this.listDirectory(args[0] || this.currentPath)
+          return this.listDirectory(args[0] || this.currentPath);
         case 'cat':
-            return this.showFileContent(args[0])
+          return this.showFileContent(args[0]);
         case 'cd':
-            return this.changeDirectory(args[0])
+          return this.changeDirectory(args[0]);
         case 'pwd':
-            return this.currentPath
+          return this.currentPath;
         case 'whoami':
-            return 'laura\nBackend Developer | DevOps Enthusiast | IA Explorer'
+          return 'laura\nBackend Developer | DevOps Enthusiast | IA Explorer | Frontend Beginner';
         case 'clear':
-            this.commandHistory = []
-            return ''
+          this.commandHistory = [];
+          return ''
         case 'help':
-            return this.showHelp()
+          return this.showHelp();
         case 'ps':
-            return this.showProcesses()
+          return this.showProcesses();
         case 'neofetch':
         case 'about':
-            return this.executeNeofetch()
+          return this.executeNeofetch();
         case 'tree':
-            return this.showTree()
+          return this.showTree();
         case 'history':
-            return this.showHistory()
+          return this.showHistory();
         case 'mail':
-            this.$emit('navigate-to', 'contact')
-            return 'Abriendo formulario de contacto... 📧'
+          this.$emit('navigate-to', 'contact');
+          return 'Abriendo formulario de contacto... 📧';
+        case 'welcome':
+          return this.executeWelcome();
         default:
-            return `bash: ${cmd}: command not found\nEscribe 'help' para ver comandos disponibles.`
-        }
+          return `bash: ${cmd}: command not found\nEscribe 'help' para ver comandos disponibles.`;
+      }
     },
 
     listDirectory(path = this.currentPath) {
@@ -365,8 +402,8 @@ export default {
       return file.content || `Content of ${filename}`;
     },
 
-        executeNeofetch() {
-            return `<div class="system-info">
+    executeNeofetch() {
+      return `<div class="system-info">
 <span style="color: #00ff88; font-weight: bold;">╭─ LAURA DEV PORTFOLIO ─────────────────────────────────────╮</span>
 <span style="color: #00ff88;">│</span> <span style="color: #ffbd2e;">👤 Desarrolladora:</span> <span style="color: #fff;">Laura</span>                                    <span style="color: #00ff88;">│</span>
 <span style="color: #00ff88;">│</span> <span style="color: #ffbd2e;">🎯 Especialidad:</span>  <span style="color: #fff;">Backend Developer</span>                        <span style="color: #00ff88;">│</span>
@@ -384,20 +421,22 @@ export default {
 <span style="color: #00ff88;">╰───────────────────────────────────────────────────────────╯</span>
 
 <span style="color: #888; font-style: italic;">💡 Tip: Usa 'cat about.txt' para más detalles o 'ps aux' para ver skills</span>
-</div>`
-        },    showProcesses() {
-        return `
+</div>`;
+    },
+
+    showProcesses() {
+      return `
     USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
     laura     1001 85.2  15.3  2048  1024 pts/0    R+   09:00   2:30 python
     laura     1002 75.0  12.1  1536   768 pts/1    S    09:15   1:45 docker
     laura     1003 68.3  10.2  1280   512 pts/2    S    09:30   1:20 vue
     laura     1004 45.1   8.4  1024   256 pts/3    S    10:00   0:45 devops
     laura     1005 32.7   6.1   768   128 pts/4    S    10:30   0:30 ai-ml
-        `
+      `;
     },
 
     showTree() {
-        return `
+      return `
     📁 laura@dev-portfolio:~
     ├── 📄 about.txt
     ├── 📄 skills.json
@@ -409,7 +448,7 @@ export default {
     └── 🟨 vue-portfolio.js*
 
     1 directory, 6 files
-        `
+      `;
     },
 
     showHistory() {
@@ -418,9 +457,7 @@ export default {
       ).join('\n');
     },
 
-    getDirectory(path) {
-      return this.fileSystem[path] || this.fileSystem['~'];
-    },
+    getDirectory(path) { return this.fileSystem[path] || this.fileSystem['~']; },
 
     getFile(filename) {
       const currentDir = this.getDirectory(this.currentPath);
@@ -457,9 +494,7 @@ export default {
     toggleGUIMode() { this.isGUIMode = !this.isGUIMode; },
 
     focusInput() {
-      this.$nextTick(() => {
-        this.$refs.commandInput?.focus()
-      });
+      this.$nextTick(() => { this.$refs.commandInput?.focus(); });
     },
 
     scrollToBottom() {
@@ -599,8 +634,7 @@ export default {
 
 .welcome-text {
   color: #888;
-  margin-bottom: 30px;
-  white-space: pre-line;
+  margin: 10px 0;
   line-height: 1.6;
 }
 
@@ -653,14 +687,20 @@ export default {
   display: flex;
   align-items: center;
   margin-bottom: 20px;
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .command-input {
   background: transparent;
   border: none;
-  color: #fff;
+  color: #ffbd2e;
   font-family: inherit;
-  font-size: 14px;
+  font-size: 16px;
   outline: none;
   flex: 1;
   margin-left: 5px;
@@ -819,5 +859,15 @@ export default {
 
 .terminal-content::-webkit-scrollbar-thumb:hover {
   background: #666;
+}
+
+/* Estilos para el welcome output */
+.welcome-output {
+  margin: 0;
+}
+
+.typing-welcome {
+  color: #00ff88;
+  line-height: 1.4;
 }
 </style>
