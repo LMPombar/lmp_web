@@ -1,6 +1,13 @@
 <template>
   <div class="taskbar">
     <div class="taskbar-apps">
+      <button class="taskbar-btn" @click="$emit('toggle-apps')" title="Todas las apps">
+        <span>📱</span>
+      </button>
+
+      <!-- Separador 1: Entre menú de apps y apps abiertas -->
+      <div v-if="allApps.length > 0" class="taskbar-separator"></div>
+
       <button
         v-for="app in allApps"
         :key="app.id"
@@ -14,16 +21,15 @@
       </button>
     </div>
     
+    <!-- Separador 2: Entre apps abiertas y sistema -->
+    <div class="taskbar-separator"></div>
+    
     <div class="taskbar-system">
       <!-- Contador de visitas globales -->
       <div class="visit-counter" :title="`Visitas globales a la web: ${visitCount}`">
-        <span class="counter-icon">{{ isLoading ? '⏳' : '🌍' }}</span>
+        <span class="counter-icon">{{ isLoading ? 'Cargando visitas' : 'Visitas a la web:' }}</span>
         <span class="counter-value">{{ isLoading ? '...' : formatVisitCount(visitCount) }}</span>
       </div>
-      
-      <button class="taskbar-btn" @click="$emit('toggle-apps')" title="Todas las apps">
-        <span>📱</span>
-      </button>
     </div>
   </div>
 </template>
@@ -204,7 +210,21 @@ export default {
 .taskbar-system {
   display: flex;
   gap: 8px;
-  margin-left: 12px;
+}
+
+/* Separador visual */
+.taskbar-separator {
+  width: 1px;
+  height: 30px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    var(--border-color) 20%,
+    var(--border-color) 80%,
+    transparent
+  );
+  margin: 0 4px;
+  flex-shrink: 0;
 }
 
 .taskbar-btn {
@@ -231,25 +251,30 @@ export default {
   background: rgba(0, 123, 255, 0.1);
   border: 1px solid rgba(0, 123, 255, 0.3);
   color: var(--text-color);
-  padding: 6px 12px;
-  border-radius: 6px;
+  padding: 3px 8px;
+  border-radius: 4px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 0px;
   font-size: 13px;
   user-select: none;
   transition: all 0.3s;
 }
 
 .visit-counter:hover {
-  background: rgba(0, 123, 255, 0.2);
-  border-color: var(--secondary-color);
-  transform: scale(1.05);
+  background: rgba(0, 123, 255, 0.15);
+  border-color: rgba(0, 123, 255, 0.4);
+  opacity: 1;
 }
 
 .counter-icon {
-  font-size: 16px;
-  animation: pulse 2s infinite;
+  font-size: 8px;
+  font-weight: 600;
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  line-height: 1;
 }
 
 @keyframes pulse {
@@ -264,11 +289,13 @@ export default {
 }
 
 .counter-value {
-  font-weight: 600;
+  font-weight: 700;
   color: var(--secondary-color);
-  min-width: 30px;
+  min-width: 25px;
   text-align: center;
   font-family: 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.2;
 }
 
 /* Scrollbar personalizada */
@@ -302,11 +329,15 @@ export default {
   
   .visit-counter {
     padding: 4px 8px;
-    font-size: 12px;
+    font-size: 9px;
   }
   
   .counter-icon {
-    font-size: 14px;
+    font-size: 8px;
+  }
+  
+  .counter-value {
+    font-size: 13px;
   }
 }
 </style>
