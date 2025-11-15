@@ -1,5 +1,5 @@
 <template>
-  <div class="terminal-portfolio">
+  <div class="portfolio-os">
     <!-- OS Bar (Barra superior) -->
     <OSBar />
     
@@ -115,7 +115,7 @@ import TechStackTreemap from './GUI/TechStackTreemap.vue'
 import CurrentStatus from './GUI/CurrentStatus.vue'
 
 export default {
-  name: 'TerminalPortfolio',
+  name: 'PortfolioOS',
   components: { 
     HelpPanel,
     OSBar,
@@ -712,7 +712,7 @@ export default {
 </script>
 
 <style scoped>
-.terminal-portfolio {
+.portfolio-os {
   height: 100vh;
   background: #0a0a0a;
   font-family: 'Fira Code', 'Courier New', monospace;
@@ -938,7 +938,7 @@ export default {
 }
 
 @media (max-width: 768px) {
-  .terminal-portfolio {
+  .portfolio-os {
     padding: 0;
   }
   

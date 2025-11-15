@@ -1,14 +1,14 @@
 <template>
-  <TerminalPortfolio @navigate-to="handleNavigation" />
+  <PortfolioOS @navigate-to="handleNavigation" />
 </template>
 
 <script>
-import TerminalPortfolio from '../components/TerminalPortfolio.vue'
+import PortfolioOS from '../components/PortfolioOS.vue'
 
 export default {
   name: 'TerminalHome',
   components: {
-    TerminalPortfolio
+    PortfolioOS
   },
   methods: {
     handleNavigation(section) {
