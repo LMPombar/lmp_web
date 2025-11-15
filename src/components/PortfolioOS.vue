@@ -127,19 +127,12 @@ export default {
     },
     
     minimizeApp(appId) {
-      console.log('🔽 Minimizando app:', appId);
-      console.log('📋 openApps ANTES:', this.openApps.map(a => a.id));
-      console.log('📋 minimizedApps ANTES:', this.minimizedApps);
-      
       // Añadir a minimizados (usar spread para reactividad garantizada)
       if (!this.minimizedApps.includes(appId)) {
         this.minimizedApps = [...this.minimizedApps, appId];
       }
       
       // NO quitamos de openApps, solo la ocultamos con v-show
-      
-      console.log('📋 openApps DESPUÉS:', this.openApps.map(a => a.id));
-      console.log('📋 minimizedApps DESPUÉS:', this.minimizedApps);
       
       // Si era la app activa, cambiar el foco a otra app NO minimizada
       if (this.activeAppId === appId) {
@@ -149,8 +142,6 @@ export default {
     },
     
     restoreApp(appId) {
-      console.log('🔼 Restaurando app:', appId);
-      
       // Solo quitar de minimizados (la app ya está en openApps)
       this.minimizedApps = this.minimizedApps.filter(id => id !== appId);
       

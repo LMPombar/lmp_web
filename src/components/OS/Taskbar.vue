@@ -15,6 +15,12 @@
     </div>
     
     <div class="taskbar-system">
+      <!-- Contador de visitas globales -->
+      <div class="visit-counter" :title="`Visitas globales a la web: ${visitCount}`">
+        <span class="counter-icon">{{ isLoading ? '⏳' : '🌍' }}</span>
+        <span class="counter-value">{{ isLoading ? '...' : formatVisitCount(visitCount) }}</span>
+      </div>
+      
       <button class="taskbar-btn" @click="$emit('toggle-apps')" title="Todas las apps">
         <span>📱</span>
       </button>
@@ -43,17 +49,21 @@ export default {
       default: () => []
     }
   },
+  data() {
+    return {
+      visitCount: '---',
+      isLoading: true
+    }
+  },
   computed: {
     allApps() {
-      // Simplemente usar openApps ya que ahora incluye también las minimizadas
-      console.log('🎯 Taskbar - openApps:', this.openApps.map(a => a.id));
-      console.log('🎯 Taskbar - minimizedApps:', this.minimizedApps);
-      console.log('🎯 Taskbar - allApps:', this.openApps.map(a => a.id));
-      
       return this.openApps;
     }
   },
   emits: ['focus-app', 'restore-app', 'toggle-apps'],
+  mounted() {
+    this.initVisitCounter();
+  },
   methods: {
     isMinimized(appId) {
       return this.minimizedApps.includes(appId);
@@ -66,6 +76,48 @@ export default {
         // Si está abierta, hacer foco
         this.$emit('focus-app', appId);
       }
+    },
+    async initVisitCounter() {
+      try {
+        // Llamar a CountAPI para incrementar el contador global
+        // Namespace: lmp-web | Key: visits
+        const response = await fetch('https://api.countapi.xyz/hit/lmp-web/visits');
+        
+        if (!response.ok) {
+          throw new Error('Error en la API');
+        }
+        
+        const data = await response.json();
+        this.visitCount = data.value;
+        this.isLoading = false;
+        
+        console.log(`✅ Visita global #${this.visitCount} registrada`);
+      } catch (error) {
+        console.error('❌ Error al obtener visitas globales:', error);
+        // Fallback a localStorage si falla la API
+        const storedCount = localStorage.getItem('portfolio_visit_count_fallback');
+        if (storedCount) {
+          this.visitCount = parseInt(storedCount) + 1;
+        } else {
+          this.visitCount = 1;
+        }
+        localStorage.setItem('portfolio_visit_count_fallback', this.visitCount.toString());
+        this.isLoading = false;
+      }
+    },
+    formatVisitCount(count) {
+      // Si es string (estado de carga o error), devolverlo tal cual
+      if (typeof count === 'string') {
+        return count;
+      }
+      
+      // Formatear el número con separadores de miles para números grandes
+      if (count >= 1000000) {
+        return (count / 1000000).toFixed(1) + 'M';
+      } else if (count >= 1000) {
+        return (count / 1000).toFixed(1) + 'k';
+      }
+      return count.toString();
     }
   }
 };
@@ -174,6 +226,51 @@ export default {
   border-color: var(--primary-color);
 }
 
+/* Contador de visitas */
+.visit-counter {
+  background: rgba(0, 123, 255, 0.1);
+  border: 1px solid rgba(0, 123, 255, 0.3);
+  color: var(--text-color);
+  padding: 6px 12px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  user-select: none;
+  transition: all 0.3s;
+}
+
+.visit-counter:hover {
+  background: rgba(0, 123, 255, 0.2);
+  border-color: var(--secondary-color);
+  transform: scale(1.05);
+}
+
+.counter-icon {
+  font-size: 16px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { 
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.7;
+    transform: scale(1.1);
+  }
+}
+
+.counter-value {
+  font-weight: 600;
+  color: var(--secondary-color);
+  min-width: 30px;
+  text-align: center;
+  font-family: 'Courier New', monospace;
+}
+
 /* Scrollbar personalizada */
 .taskbar-apps::-webkit-scrollbar {
   height: 4px;
@@ -201,6 +298,15 @@ export default {
   
   .app-name {
     display: none;
+  }
+  
+  .visit-counter {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+  
+  .counter-icon {
+    font-size: 14px;
   }
 }
 </style>
