@@ -1,28 +1,19 @@
 <template>
   <div class="terminal-portfolio">
-    <!-- Main Layout: Two Columns -->
-    <div class="terminal-layout">
-      
-      <!-- Left Column: Interactive Terminal -->
+    <!-- OS Bar (Barra superior) -->
+    <OSBar />
+    
+    <!-- Main Desktop Area -->
+    <div class="desktop-area">
+      <!-- Terminal Window -->
       <div class="terminal-column" :style="layoutStyles.terminal">
-        <div class="terminal-window">
-          <!-- Terminal Header -->
-          <div class="terminal-header">
-            <div class="terminal-buttons">
-              <span class="btn-close"></span>
-              <span class="btn-minimize"></span>
-              <span class="btn-maximize"></span>
-            </div>
-            <div class="terminal-title">laura@dev-portfolio: ~</div>
-            <div class="terminal-actions">
-              <button @click="toggleHelp" class="help-btn">❓</button>
-              <button @click="toggleGUIMode" class="gui-btn">
-                {{ isGUIMode ? '💻' : '🖱️' }}
-              </button>
-            </div>
-          </div>
-
-          <!-- Terminal Content -->
+        <OSWindow 
+          title="Terminal"
+          icon="💻"
+          :can-close="false"
+          :can-minimize="false"
+          :can-maximize="false"
+        >
           <div class="terminal-content" ref="terminalContent">
             
             <!-- Welcome ASCII Art -->
@@ -83,7 +74,7 @@
               </button>
             </div>
           </div>
-        </div>
+        </OSWindow>
       </div>
 
       <!-- Resizer (Horizontal en desktop, Vertical en móvil) -->
@@ -95,19 +86,40 @@
         <div class="resizer-line"></div>
       </div>
 
-      <!-- Right Column: GUI Dashboard -->
-      <GUIContainer :style="layoutStyles.gui" />
+      <!-- Right Column: GUI Apps -->
+      <GUIContainer 
+        :style="layoutStyles.gui"
+        :open-apps="openApps"
+        @close-app="closeApp"
+      />
     </div>
+    
+    <!-- Taskbar (Barra inferior) -->
+    <Taskbar 
+      :open-apps="allOpenApps"
+      :active-app-id="activeAppId"
+      @focus-app="focusApp"
+      @toggle-apps="toggleAppsMenu"
+    />
   </div>
 </template>
 
 <script>
 import GUIContainer from './GUI/GUIContainer.vue'
 import HelpPanel from './HelpPanel.vue'
+import OSBar from './OS/OSBar.vue'
+import OSWindow from './OS/Window.vue'
+import Taskbar from './OS/Taskbar.vue'
 
 export default {
   name: 'TerminalPortfolio',
-  components: { GUIContainer, HelpPanel },
+  components: { 
+    GUIContainer, 
+    HelpPanel,
+    OSBar,
+    OSWindow,
+    Taskbar
+  },
   data() {
     return {
       showWelcome: true,
@@ -129,6 +141,25 @@ export default {
       guiHeight: 50,       // Altura para modo móvil (porcentaje)
       isResizing: false,
       isNarrowScreen: false,
+      
+      // OS state
+      openApps: [
+        {
+          id: 'timer',
+          name: 'Experiencia',
+          icon: '⌚',
+          component: 'TimeCounter',
+          props: {}
+        },
+        {
+          id: 'status',
+          name: 'Sistema',
+          icon: '📊',
+          component: 'SystemStatus',
+          props: {}
+        }
+      ],
+      activeAppId: 'terminal',
 
       asciiArt: `
  █     █░▓█████  ██▓     ▄████▄   ▒█████   ███▄ ▄███▓▓█████  ▐██▌
@@ -245,6 +276,18 @@ export default {
           gui: { width: this.sidebarWidth + '%' }
         };
       }
+    },
+    
+    allOpenApps() {
+      // Terminal siempre está abierta + apps del GUI
+      return [
+        {
+          id: 'terminal',
+          name: 'Terminal',
+          icon: '💻'
+        },
+        ...this.openApps
+      ];
     }
   },
 
@@ -686,7 +729,7 @@ export default {
     handleResize(e) {
       if (!this.isResizing) return;
       
-      const container = document.querySelector('.terminal-layout');
+      const container = document.querySelector('.desktop-area');
       if (!container) return;
       
       const containerRect = container.getBoundingClientRect();
@@ -725,17 +768,35 @@ export default {
     stopResize() {
       this.isResizing = false;
     },
+    
+    // OS methods
+    closeApp(appId) {
+      this.openApps = this.openApps.filter(app => app.id !== appId);
+    },
+    
+    focusApp(appId) {
+      this.activeAppId = appId;
+      // Aquí podríamos añadir lógica para traer la app al frente
+    },
+    
+    toggleAppsMenu() {
+      // Aquí podríamos mostrar un menú con todas las apps disponibles
+      console.log('Toggle apps menu');
+    }
   }
 }
 </script>
 
 <style scoped>
 .terminal-portfolio {
-  min-height: 100vh;
+  height: 100vh;
   background: #0a0a0a;
   font-family: 'Fira Code', 'Courier New', monospace;
   padding: 0;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
   
   /* CSS Variables - se heredan a los componentes hijos */
   --primary-color: #00ff88;
@@ -763,18 +824,23 @@ export default {
   --title-border: 1px solid var(--border-color);
 }
 
-.terminal-layout {
+/* Main Desktop Area */
+.desktop-area {
   display: flex;
-  height: 100vh;
+  flex: 1;
   gap: 0;
   position: relative;
+  overflow: hidden;
+  margin-bottom: 50px; /* Espacio para la taskbar fija */
 }
 
-/* Left Column - Terminal */
+/* Terminal Column */
 .terminal-column {
   min-width: 0;
   padding: 20px;
   transition: width 0.1s ease-out;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Resizer - Horizontal (default) */
@@ -821,69 +887,15 @@ export default {
   height: 2px;
 }
 
-.terminal-window {
-  background: #1e1e1e;
-  border-radius: 8px;
-  box-shadow: 0 8px 32px rgba(0, 255, 0, 0.1);
-  border: 1px solid #333;
-  height: 100%;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
+/* Terminal Content Styles */
+.terminal-content {
+  padding: 20px;
+  flex: 1;
+  overflow-y: auto;
+  background: #0a0a0a;
 }
 
-.terminal-header {
-  background: #2d2d2d;
-  padding: 6px 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid #444;
-  flex-shrink: 0;
-}
-
-.terminal-buttons {
-  display: flex;
-  gap: 8px;
-}
-
-.terminal-buttons span {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  cursor: pointer;
-}
-
-.btn-close { background: #ff5f57; }
-.btn-minimize { background: #ffbd2e; }
-.btn-maximize { background: #28ca42; }
-
-.terminal-title {
-  color: #fff;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.terminal-actions {
-  display: flex;
-  gap: 10px;
-}
-
-.help-btn, .gui-btn {
-  background: none;
-  border: none;
-  color: #00ff88;
-  cursor: pointer;
-  font-size: 16px;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: background 0.3s;
-}
-
-.help-btn:hover, .gui-btn:hover {
-  background: rgba(0, 255, 136, 0.1);
-}
-
+/* Terminal Content Styles */
 .terminal-content {
   padding: 20px;
   flex: 1;
@@ -1019,9 +1031,8 @@ export default {
 
 /* Responsive */
 @media (max-width: 1200px) {
-  .terminal-layout {
+  .desktop-area {
     flex-direction: column;
-    height: 100vh;
   }
 
   .terminal-column {
@@ -1035,10 +1046,6 @@ export default {
     display: flex !important;
   }
   
-  .terminal-window {
-    height: 100%;
-  }
-  
   .terminal-content {
     overflow-y: auto;
   }
@@ -1047,12 +1054,6 @@ export default {
 @media (max-width: 768px) {
   .terminal-portfolio {
     padding: 0;
-    height: 100vh;
-    overflow: hidden;
-  }
-  
-  .terminal-layout {
-    height: 100vh;
   }
   
   .terminal-column {

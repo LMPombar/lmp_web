@@ -11,29 +11,19 @@
 
     <!-- Apps abiertas -->
     <div v-else class="apps-container">
-      <div 
+      <OSWindow
         v-for="app in openApps" 
         :key="app.id"
-        class="app-wrapper"
+        :title="app.name"
+        :icon="app.icon"
+        :can-close="true"
+        :can-minimize="false"
+        :can-maximize="false"
+        @close="$emit('close-app', app.id)"
+        class="app-window"
       >
-        <!-- Header de la app con título y botón cerrar -->
-        <div class="app-header">
-          <span class="app-icon">{{ app.icon }}</span>
-          <span class="app-title">{{ app.name }}</span>
-          <button 
-            @click="$emit('close-app', app.id)" 
-            class="close-btn"
-            :title="`Cerrar ${app.name}`"
-          >
-            ✕
-          </button>
-        </div>
-        
-        <!-- Contenido de la app (componente dinámico) -->
-        <div class="app-content">
-          <component :is="app.component" v-bind="app.props" />
-        </div>
-      </div>
+        <component :is="app.component" v-bind="app.props" />
+      </OSWindow>
     </div>
   </div>
 </template>
@@ -43,6 +33,7 @@ import TimeCounter from './TimeCounter.vue'
 import TechStackTreemap from './TechStackTreemap.vue'
 import SystemStatus from './SystemStatus.vue'
 import CurrentStatus from './CurrentStatus.vue'
+import OSWindow from '../OS/Window.vue'
 
 export default {
   name: 'GUIContainer',
@@ -50,7 +41,8 @@ export default {
     TimeCounter,
     TechStackTreemap,
     SystemStatus,
-    CurrentStatus
+    CurrentStatus,
+    OSWindow
   },
   props: {
     openApps: {
@@ -135,13 +127,8 @@ export default {
   margin-bottom: 0px !important;
 }
 
-/* Wrapper de cada app */
-.app-wrapper {
-  background: var(--widget-background);
-  border: var(--widget-border);
-  border-radius: var(--widget-border-radius);
-  overflow: hidden;
-  box-shadow: var(--widget-shadow);
+/* App Window */
+.app-window {
   animation: slideIn 0.3s ease-out;
 }
 
@@ -154,49 +141,6 @@ export default {
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-/* Header de la app */
-.app-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
-  background: #1e1e1e;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.app-icon {
-  font-size: 18px;
-}
-
-.app-title {
-  flex: 1;
-  color: var(--primary-color);
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 16px;
-  transition: all 0.2s;
-  line-height: 1;
-}
-
-.close-btn:hover {
-  background: rgba(255, 95, 87, 0.2);
-  color: #ff5f57;
-}
-
-/* Contenido de la app */
-.app-content {
-  padding: 0;
 }
 
 /* Responsive */
