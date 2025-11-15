@@ -3,95 +3,94 @@
     <!-- OS Bar (Barra superior) -->
     <OSBar />
     
-    <!-- Main Desktop Area -->
+    <!-- Desktop Area - Todas las ventanas flotando aquí -->
     <div class="desktop-area">
       <!-- Terminal Window -->
-      <div class="terminal-column" :style="layoutStyles.terminal">
-        <OSWindow 
-          title="Terminal"
-          icon="💻"
-          :can-close="false"
-          :can-minimize="false"
-          :can-maximize="false"
-        >
-          <div class="terminal-content" ref="terminalContent">
-            
-            <!-- Welcome ASCII Art -->
-            <div class="welcome-section" v-if="showWelcome">
-              <pre class="ascii-art">{{ asciiArt }}</pre>
-            </div>
+      <OSWindow 
+        title="Terminal"
+        icon="💻"
+        :can-close="false"
+        :can-minimize="true"
+        :can-maximize="true"
+        class="terminal-window"
+        @minimize="minimizeApp('terminal')"
+        @maximize="maximizeApp('terminal')"
+      >
+        <div class="terminal-content" ref="terminalContent">
+          
+          <!-- Welcome ASCII Art -->
+          <div class="welcome-section" v-if="showWelcome">
+            <pre class="ascii-art">{{ asciiArt }}</pre>
+          </div>
 
-            <!-- Command History -->
-            <div class="command-history">
-              <div 
-                v-for="(entry, index) in commandHistory" 
-                :key="index" 
-                class="command-entry"
-              >
-                <div class="command-line">
-                  <span class="prompt">{{ entry.prompt }}</span>
-                  <span class="command">{{ entry.command }}</span>
-                  <span v-if="isTypingCommand && index === commandHistory.length - 1" class="typing-cursor">_</span>
-                </div>
-                <div v-if="entry.output && entry.output.type === 'component'" class="command-output">
-                  <component :is="entry.output.component" v-bind="entry.output.props" />
-                </div>
-                <div v-else-if="entry.output" class="command-output" v-html="formatOutput(entry.output)" />
+          <!-- Command History -->
+          <div class="command-history">
+            <div 
+              v-for="(entry, index) in commandHistory" 
+              :key="index" 
+              class="command-entry"
+            >
+              <div class="command-line">
+                <span class="prompt">{{ entry.prompt }}</span>
+                <span class="command">{{ entry.command }}</span>
+                <span v-if="isTypingCommand && index === commandHistory.length - 1" class="typing-cursor">_</span>
               </div>
-            </div>
-
-            <!-- Current Input Line -->
-            <div v-if="showRealInput" class="input-line">
-              <span class="prompt">{{ currentPrompt }}</span>
-              <input 
-                v-model="currentCommand"
-                @keyup.enter="executeCommand"
-                @keydown.tab.prevent="autocomplete"
-                @keyup.up="previousCommand"
-                @keyup.down="nextCommand"
-                ref="commandInput"
-                class="command-input"
-                :placeholder="isGUIMode ? 'Escribe un comando o usa los botones...' : 'Escribe help para ver comandos disponibles...'"
-              >
-            </div>
-
-            <!-- Quick Action Buttons (GUI Mode) -->
-            <div v-if="isGUIMode && showRealInput" class="quick-actions">
-              <button @click="executeQuickCommand('ls')" class="quick-btn">
-                📁 Explorar
-              </button>
-              <button @click="executeQuickCommand('cat about.txt')" class="quick-btn">
-                👤 Sobre Mí
-              </button>
-              <button @click="executeQuickCommand('ls projects/')" class="quick-btn">
-                💼 Proyectos
-              </button>
-              <button @click="executeQuickCommand('cat skills.json')" class="quick-btn">
-                🛠️ Skills
-              </button>
-              <button @click="executeQuickCommand('mail')" class="quick-btn">
-                📧 Contacto
-              </button>
+              <div v-if="entry.output && entry.output.type === 'component'" class="command-output">
+                <component :is="entry.output.component" v-bind="entry.output.props" />
+              </div>
+              <div v-else-if="entry.output" class="command-output" v-html="formatOutput(entry.output)" />
             </div>
           </div>
-        </OSWindow>
-      </div>
 
-      <!-- Resizer (Horizontal en desktop, Vertical en móvil) -->
-      <div 
-        :class="['resizer', { 'resizer-vertical': isNarrowScreen }]"
-        @mousedown="startResize"
-        @touchstart="startResize"
+          <!-- Current Input Line -->
+          <div v-if="showRealInput" class="input-line">
+            <span class="prompt">{{ currentPrompt }}</span>
+            <input 
+              v-model="currentCommand"
+              @keyup.enter="executeCommand"
+              @keydown.tab.prevent="autocomplete"
+              @keyup.up="previousCommand"
+              @keyup.down="nextCommand"
+              ref="commandInput"
+              class="command-input"
+              :placeholder="isGUIMode ? 'Escribe un comando o usa los botones...' : 'Escribe help para ver comandos disponibles...'"
+            >
+          </div>
+
+          <!-- Quick Action Buttons (GUI Mode) -->
+          <div v-if="isGUIMode && showRealInput" class="quick-actions">
+            <button @click="executeQuickCommand('ls')" class="quick-btn">
+              📁 Explorar
+            </button>
+            <button @click="executeQuickCommand('cat about.txt')" class="quick-btn">
+              👤 Sobre Mí
+            </button>
+            <button @click="executeQuickCommand('ls projects/')" class="quick-btn">
+              💼 Proyectos
+            </button>
+            <button @click="executeQuickCommand('cat skills.json')" class="quick-btn">
+              🛠️ Skills
+            </button>
+            <button @click="executeQuickCommand('mail')" class="quick-btn">
+              📧 Contacto
+            </button>
+          </div>
+        </div>
+      </OSWindow>
+
+      <!-- GUI Apps Windows -->
+      <OSWindow
+        v-for="app in openApps"
+        :key="app.id"
+        :title="app.name"
+        :icon="app.icon"
+        :class="['app-window', `app-${app.id}`, { active: app.id === activeAppId }]"
+        @close="closeApp(app.id)"
+        @minimize="minimizeApp(app.id)"
+        @maximize="maximizeApp(app.id)"
       >
-        <div class="resizer-line"></div>
-      </div>
-
-      <!-- Right Column: GUI Apps -->
-      <GUIContainer 
-        :style="layoutStyles.gui"
-        :open-apps="openApps"
-        @close-app="closeApp"
-      />
+        <component :is="app.component" v-bind="app.props" />
+      </OSWindow>
     </div>
     
     <!-- Taskbar (Barra inferior) -->
@@ -105,20 +104,27 @@
 </template>
 
 <script>
-import GUIContainer from './GUI/GUIContainer.vue'
 import HelpPanel from './HelpPanel.vue'
 import OSBar from './OS/OSBar.vue'
 import OSWindow from './OS/Window.vue'
 import Taskbar from './OS/Taskbar.vue'
+// App components
+import TimeCounter from './GUI/TimeCounter.vue'
+import SystemStatus from './GUI/SystemStatus.vue'
+import TechStackTreemap from './GUI/TechStackTreemap.vue'
+import CurrentStatus from './GUI/CurrentStatus.vue'
 
 export default {
   name: 'TerminalPortfolio',
   components: { 
-    GUIContainer, 
     HelpPanel,
     OSBar,
     OSWindow,
-    Taskbar
+    Taskbar,
+    TimeCounter,
+    SystemStatus,
+    TechStackTreemap,
+    CurrentStatus
   },
   data() {
     return {
@@ -133,14 +139,6 @@ export default {
       typedWelcome: '',
       isTypingCommand: false,
       showRealInput: false,
-      
-      // Resizer state
-      terminalWidth: 60,
-      sidebarWidth: 40,
-      terminalHeight: 50,  // Altura para modo móvil (porcentaje)
-      guiHeight: 50,       // Altura para modo móvil (porcentaje)
-      isResizing: false,
-      isNarrowScreen: false,
       
       // OS state
       openApps: [
@@ -262,22 +260,6 @@ export default {
   },
 
   computed: {
-    layoutStyles() {
-      if (this.isNarrowScreen) {
-        // Modo vertical (pantallas estrechas)
-        return {
-          terminal: { height: this.terminalHeight + '%' },
-          gui: { height: this.guiHeight + '%' }
-        };
-      } else {
-        // Modo horizontal (pantallas anchas)
-        return {
-          terminal: { width: this.terminalWidth + '%' },
-          gui: { width: this.sidebarWidth + '%' }
-        };
-      }
-    },
-    
     allOpenApps() {
       // Terminal siempre está abierta + apps del GUI
       return [
@@ -293,25 +275,10 @@ export default {
 
   mounted() {
     this.addInitialCommands();
-    this.checkScreenSize();
-    
-    // Add event listeners for resizing
-    document.addEventListener('mousemove', this.handleResize);
-    document.addEventListener('mouseup', this.stopResize);
-    document.addEventListener('touchmove', this.handleResize);
-    document.addEventListener('touchend', this.stopResize);
-    
-    // Add listener for screen size changes
-    window.addEventListener('resize', this.checkScreenSize);
   },
 
   beforeUnmount() {
-    // Clean up event listeners
-    document.removeEventListener('mousemove', this.handleResize);
-    document.removeEventListener('mouseup', this.stopResize);
-    document.removeEventListener('touchmove', this.handleResize);
-    document.removeEventListener('touchend', this.stopResize);
-    window.removeEventListener('resize', this.checkScreenSize);
+    // Clean up if needed
   },
 
   methods: {
@@ -715,72 +682,29 @@ export default {
       // Para cualquier otro caso (incluye <span>), convierte \n en <br>
       return output.replace(/\n/g, '<br>');
     },
-
-    // Resizer methods
-    checkScreenSize() {
-      this.isNarrowScreen = window.innerWidth <= 1200;
-    },
-
-    startResize(e) {
-      this.isResizing = true;
-      e.preventDefault();
-    },
-
-    handleResize(e) {
-      if (!this.isResizing) return;
-      
-      const container = document.querySelector('.desktop-area');
-      if (!container) return;
-      
-      const containerRect = container.getBoundingClientRect();
-      
-      if (this.isNarrowScreen) {
-        // Resize vertical (pantallas estrechas)
-        const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
-        const containerHeight = containerRect.height;
-        const offsetY = clientY - containerRect.top;
-        
-        // Calcular el nuevo porcentaje (con límites)
-        let newTerminalHeight = (offsetY / containerHeight) * 100;
-        
-        // Límites: mínimo 20%, máximo 80%
-        newTerminalHeight = Math.max(20, Math.min(80, newTerminalHeight));
-        
-        this.terminalHeight = newTerminalHeight;
-        this.guiHeight = 100 - newTerminalHeight;
-      } else {
-        // Resize horizontal (pantallas anchas)
-        const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
-        const containerWidth = containerRect.width;
-        const offsetX = clientX - containerRect.left;
-        
-        // Calcular el nuevo porcentaje (con límites)
-        let newTerminalWidth = (offsetX / containerWidth) * 100;
-        
-        // Límites: mínimo 30%, máximo 80%
-        newTerminalWidth = Math.max(30, Math.min(80, newTerminalWidth));
-        
-        this.terminalWidth = newTerminalWidth;
-        this.sidebarWidth = 100 - newTerminalWidth;
-      }
-    },
-
-    stopResize() {
-      this.isResizing = false;
-    },
     
     // OS methods
     closeApp(appId) {
       this.openApps = this.openApps.filter(app => app.id !== appId);
     },
     
+    minimizeApp(appId) {
+      // TODO: Implementar lógica de minimizar
+      console.log('Minimize app:', appId);
+    },
+    
+    maximizeApp(appId) {
+      // TODO: Implementar lógica de maximizar
+      console.log('Maximize app:', appId);
+    },
+    
     focusApp(appId) {
       this.activeAppId = appId;
-      // Aquí podríamos añadir lógica para traer la app al frente
+      // TODO: Aquí podríamos añadir lógica para traer la app al frente (z-index)
     },
     
     toggleAppsMenu() {
-      // Aquí podríamos mostrar un menú con todas las apps disponibles
+      // TODO: Aquí podríamos mostrar un menú con todas las apps disponibles
       console.log('Toggle apps menu');
     }
   }
@@ -826,65 +750,32 @@ export default {
 
 /* Main Desktop Area */
 .desktop-area {
-  display: flex;
   flex: 1;
-  gap: 0;
   position: relative;
   overflow: hidden;
   margin-bottom: 50px; /* Espacio para la taskbar fija */
-}
-
-/* Terminal Column */
-.terminal-column {
-  min-width: 0;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 20px;
   padding: 20px;
-  transition: width 0.1s ease-out;
-  display: flex;
-  flex-direction: column;
+  align-content: start;
 }
 
-/* Resizer - Horizontal (default) */
-.resizer {
-  width: 8px;
-  cursor: col-resize;
-  background: transparent;
-  position: relative;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* Terminal Window - Ocupa más espacio por defecto */
+.terminal-window {
+  grid-column: span 2;
+  min-height: 500px;
+}
+
+/* App Windows */
+.app-window {
+  min-height: 400px;
+}
+
+.app-window.active {
   z-index: 10;
-  transition: background 0.2s;
-}
-
-.resizer:hover {
-  background: rgba(0, 255, 136, 0.1);
-}
-
-.resizer:hover .resizer-line {
-  background: var(--primary-color);
-  box-shadow: 0 0 8px rgba(0, 255, 136, 0.5);
-}
-
-.resizer-line {
-  width: 2px;
-  height: 60px;
-  background: var(--border-color);
-  border-radius: 2px;
-  transition: all 0.2s;
-}
-
-/* Resizer - Vertical (pantallas estrechas) */
-.resizer-vertical {
-  width: 100%;
-  height: 8px;
-  cursor: row-resize;
-  flex-direction: row;
-}
-
-.resizer-vertical .resizer-line {
-  width: 60px;
-  height: 2px;
+  box-shadow: 0 12px 40px rgba(0, 255, 136, 0.2);
 }
 
 /* Terminal Content Styles */
@@ -1032,22 +923,17 @@ export default {
 /* Responsive */
 @media (max-width: 1200px) {
   .desktop-area {
-    flex-direction: column;
+    grid-template-columns: 1fr;
+    padding: 15px;
   }
 
-  .terminal-column {
-    width: 100% !important;
-    padding: 20px;
-    overflow: hidden;
+  .terminal-window {
+    grid-column: span 1;
+    min-height: 400px;
   }
   
-  /* Mostrar resizer vertical en pantallas estrechas */
-  .resizer {
-    display: flex !important;
-  }
-  
-  .terminal-content {
-    overflow-y: auto;
+  .app-window {
+    min-height: 350px;
   }
 }
 
@@ -1056,21 +942,20 @@ export default {
     padding: 0;
   }
   
-  .terminal-column {
+  .desktop-area {
     padding: 10px;
+    gap: 10px;
+    grid-template-columns: 1fr;
+  }
+  
+  .terminal-window,
+  .app-window {
+    min-height: 300px;
   }
   
   .terminal-content {
     overflow-y: auto;
-    padding-bottom: 100px;
-  }
-  
-  .input-line {
-    position: sticky;
-    bottom: 0;
-    background: #0a0a0a;
-    padding: 10px 0;
-    margin-bottom: 0;
+    padding: 10px;
   }
   
   .ascii-art {
