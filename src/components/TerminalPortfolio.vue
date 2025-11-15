@@ -4,7 +4,7 @@
     <div class="terminal-layout">
       
       <!-- Left Column: Interactive Terminal -->
-      <div class="terminal-column">
+      <div class="terminal-column" :style="layoutStyles.terminal">
         <div class="terminal-window">
           <!-- Terminal Header -->
           <div class="terminal-header">
@@ -86,19 +86,28 @@
         </div>
       </div>
 
-      <!-- Right Column: Status Dashboard -->
-      <TerminalSidebar />
+      <!-- Resizer (Horizontal en desktop, Vertical en móvil) -->
+      <div 
+        :class="['resizer', { 'resizer-vertical': isNarrowScreen }]"
+        @mousedown="startResize"
+        @touchstart="startResize"
+      >
+        <div class="resizer-line"></div>
+      </div>
+
+      <!-- Right Column: GUI Dashboard -->
+      <GUIContainer :style="layoutStyles.gui" />
     </div>
   </div>
 </template>
 
 <script>
-import TerminalSidebar from './Sidebar/TerminalSidebar.vue'
+import GUIContainer from './GUI/GUIContainer.vue'
 import HelpPanel from './HelpPanel.vue'
 
 export default {
   name: 'TerminalPortfolio',
-  components: { TerminalSidebar, HelpPanel },
+  components: { GUIContainer, HelpPanel },
   data() {
     return {
       showWelcome: true,
@@ -112,6 +121,14 @@ export default {
       typedWelcome: '',
       isTypingCommand: false,
       showRealInput: false,
+      
+      // Resizer state
+      terminalWidth: 60,
+      sidebarWidth: 40,
+      terminalHeight: 50,  // Altura para modo móvil (porcentaje)
+      guiHeight: 50,       // Altura para modo móvil (porcentaje)
+      isResizing: false,
+      isNarrowScreen: false,
 
       asciiArt: `
  █     █░▓█████  ██▓     ▄████▄   ▒█████   ███▄ ▄███▓▓█████  ▐██▌
@@ -213,8 +230,45 @@ export default {
     }
   },
 
+  computed: {
+    layoutStyles() {
+      if (this.isNarrowScreen) {
+        // Modo vertical (pantallas estrechas)
+        return {
+          terminal: { height: this.terminalHeight + '%' },
+          gui: { height: this.guiHeight + '%' }
+        };
+      } else {
+        // Modo horizontal (pantallas anchas)
+        return {
+          terminal: { width: this.terminalWidth + '%' },
+          gui: { width: this.sidebarWidth + '%' }
+        };
+      }
+    }
+  },
+
   mounted() {
     this.addInitialCommands();
+    this.checkScreenSize();
+    
+    // Add event listeners for resizing
+    document.addEventListener('mousemove', this.handleResize);
+    document.addEventListener('mouseup', this.stopResize);
+    document.addEventListener('touchmove', this.handleResize);
+    document.addEventListener('touchend', this.stopResize);
+    
+    // Add listener for screen size changes
+    window.addEventListener('resize', this.checkScreenSize);
+  },
+
+  beforeUnmount() {
+    // Clean up event listeners
+    document.removeEventListener('mousemove', this.handleResize);
+    document.removeEventListener('mouseup', this.stopResize);
+    document.removeEventListener('touchmove', this.handleResize);
+    document.removeEventListener('touchend', this.stopResize);
+    window.removeEventListener('resize', this.checkScreenSize);
   },
 
   methods: {
@@ -453,7 +507,92 @@ export default {
       ).join('\n');
     },
 
-    getDirectory(path) { return this.fileSystem[path] || this.fileSystem['~']; },
+    changeDirectory(path) {
+      if (!path) {
+        // cd sin argumentos va al home
+        this.currentPath = '~';
+        this.currentPrompt = 'laura@dev-portfolio:~$';
+        return '';
+      }
+
+      // Manejar paths relativos y absolutos
+      let targetPath = path;
+      
+      // cd .. (subir un nivel)
+      if (path === '..') {
+        if (this.currentPath === '~') {
+          return 'cd: ..: Permission denied';
+        }
+        this.currentPath = '~';
+        this.currentPrompt = 'laura@dev-portfolio:~$';
+        return '';
+      }
+      
+      // cd . (directorio actual)
+      if (path === '.') {
+        return '';
+      }
+      
+      // Rutas relativas desde ~
+      if (!path.startsWith('~') && !path.startsWith('/')) {
+        targetPath = `~/${path}`;
+      }
+      
+      // Normalizar la ruta (eliminar / al final si existe)
+      targetPath = targetPath.replace(/\/$/, '');
+      
+      // Verificar si el directorio existe
+      const dir = this.getDirectory(targetPath);
+      
+      if (!dir) {
+        return `cd: ${path}: No such file or directory`;
+      }
+      
+      if (dir.type !== 'directory') {
+        return `cd: ${path}: Not a directory`;
+      }
+      
+      // Cambiar al directorio
+      this.currentPath = targetPath;
+      
+      // Actualizar el prompt
+      const displayPath = targetPath === '~' ? '~' : targetPath.replace('~/', '~/');
+      this.currentPrompt = `laura@dev-portfolio:${displayPath}$`;
+      
+      return '';
+    },
+
+    getDirectory(path) { 
+      // Normalizar la ruta
+      if (!path || path === '~') {
+        return this.fileSystem['~'];
+      }
+      
+      // Si es una ruta relativa, convertirla a absoluta
+      if (!path.startsWith('~')) {
+        path = `~/${path}`;
+      }
+      
+      // Eliminar / al final
+      path = path.replace(/\/$/, '');
+      
+      // Si es el home
+      if (path === '~') {
+        return this.fileSystem['~'];
+      }
+      
+      // Si es un subdirectorio
+      const parts = path.split('/');
+      if (parts[0] === '~' && parts.length === 2) {
+        const dirName = parts[1];
+        const homeContents = this.fileSystem['~'].contents;
+        if (homeContents[dirName] && homeContents[dirName].type === 'directory') {
+          return homeContents[dirName];
+        }
+      }
+      
+      return null;
+    },
 
     getFile(filename) {
       const currentDir = this.getDirectory(this.currentPath);
@@ -533,6 +672,59 @@ export default {
       // Para cualquier otro caso (incluye <span>), convierte \n en <br>
       return output.replace(/\n/g, '<br>');
     },
+
+    // Resizer methods
+    checkScreenSize() {
+      this.isNarrowScreen = window.innerWidth <= 1200;
+    },
+
+    startResize(e) {
+      this.isResizing = true;
+      e.preventDefault();
+    },
+
+    handleResize(e) {
+      if (!this.isResizing) return;
+      
+      const container = document.querySelector('.terminal-layout');
+      if (!container) return;
+      
+      const containerRect = container.getBoundingClientRect();
+      
+      if (this.isNarrowScreen) {
+        // Resize vertical (pantallas estrechas)
+        const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+        const containerHeight = containerRect.height;
+        const offsetY = clientY - containerRect.top;
+        
+        // Calcular el nuevo porcentaje (con límites)
+        let newTerminalHeight = (offsetY / containerHeight) * 100;
+        
+        // Límites: mínimo 20%, máximo 80%
+        newTerminalHeight = Math.max(20, Math.min(80, newTerminalHeight));
+        
+        this.terminalHeight = newTerminalHeight;
+        this.guiHeight = 100 - newTerminalHeight;
+      } else {
+        // Resize horizontal (pantallas anchas)
+        const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        const containerWidth = containerRect.width;
+        const offsetX = clientX - containerRect.left;
+        
+        // Calcular el nuevo porcentaje (con límites)
+        let newTerminalWidth = (offsetX / containerWidth) * 100;
+        
+        // Límites: mínimo 30%, máximo 80%
+        newTerminalWidth = Math.max(30, Math.min(80, newTerminalWidth));
+        
+        this.terminalWidth = newTerminalWidth;
+        this.sidebarWidth = 100 - newTerminalWidth;
+      }
+    },
+
+    stopResize() {
+      this.isResizing = false;
+    },
   }
 }
 </script>
@@ -575,13 +767,58 @@ export default {
   display: flex;
   height: 100vh;
   gap: 0;
+  position: relative;
 }
 
 /* Left Column - Terminal */
 .terminal-column {
-  flex: 1;
   min-width: 0;
   padding: 20px;
+  transition: width 0.1s ease-out;
+}
+
+/* Resizer - Horizontal (default) */
+.resizer {
+  width: 8px;
+  cursor: col-resize;
+  background: transparent;
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: background 0.2s;
+}
+
+.resizer:hover {
+  background: rgba(0, 255, 136, 0.1);
+}
+
+.resizer:hover .resizer-line {
+  background: var(--primary-color);
+  box-shadow: 0 0 8px rgba(0, 255, 136, 0.5);
+}
+
+.resizer-line {
+  width: 2px;
+  height: 60px;
+  background: var(--border-color);
+  border-radius: 2px;
+  transition: all 0.2s;
+}
+
+/* Resizer - Vertical (pantallas estrechas) */
+.resizer-vertical {
+  width: 100%;
+  height: 8px;
+  cursor: row-resize;
+  flex-direction: row;
+}
+
+.resizer-vertical .resizer-line {
+  width: 60px;
+  height: 2px;
 }
 
 .terminal-window {
@@ -597,7 +834,7 @@ export default {
 
 .terminal-header {
   background: #2d2d2d;
-  padding: 12px 20px;
+  padding: 6px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -784,13 +1021,18 @@ export default {
 @media (max-width: 1200px) {
   .terminal-layout {
     flex-direction: column;
-    height: 100vh; /* Mantener altura completa */
+    height: 100vh;
   }
 
   .terminal-column {
-    min-height: 50vh;
-    max-height: 50vh; /* Limitar altura para que el scroll funcione */
-    overflow: hidden; /* Asegurar que el contenido no se desborde */
+    width: 100% !important;
+    padding: 20px;
+    overflow: hidden;
+  }
+  
+  /* Mostrar resizer vertical en pantallas estrechas */
+  .resizer {
+    display: flex !important;
   }
   
   .terminal-window {
@@ -798,7 +1040,6 @@ export default {
   }
   
   .terminal-content {
-    max-height: calc(50vh - 60px); /* Restar altura del header */
     overflow-y: auto;
   }
 }
@@ -816,14 +1057,11 @@ export default {
   
   .terminal-column {
     padding: 10px;
-    min-height: 60vh;
-    max-height: 60vh; /* Más espacio para la terminal en móvil */
   }
   
   .terminal-content {
-    max-height: calc(60vh - 80px); /* Ajustar para el header y padding */
     overflow-y: auto;
-    padding-bottom: 100px; /* Espacio extra para el input */
+    padding-bottom: 100px;
   }
   
   .input-line {
