@@ -1,43 +1,42 @@
 <template>
     <div class="status-widget system-widget">
-        <h3 class="widget-title">⚡ Sistema</h3>
-        <div class="system-stats">
-            <div class="stat-item">
-                <span class="stat-label">CPU (Problem Solving)</span>
-                <div class="stat-bar">
-                <div class="stat-progress" :style="{ width: systemStats.cpu + '%' }"></div>
-                </div>
-                <span class="stat-value">{{ systemStats.cpu }}%</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">Memory (Curiosidad)</span>
-                <div class="stat-bar">
-                <div class="stat-progress" :style="{ width: systemStats.memory + '%' }"></div>
-                </div>
-                <span class="stat-value">{{ systemStats.memory }}%</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">Creativity Engine</span>
-                <div class="stat-bar">
-                <div class="stat-progress" :style="{ width: systemStats.creativity + '%' }"></div>
-                </div>
-                <span class="stat-value">{{ systemStats.creativity }}%</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">Learning Rate</span>
-                <div class="stat-bar">
-                <div class="stat-progress" :style="{ width: systemStats.learning + '%' }"></div>
-                </div>
-                <span class="stat-value">{{ systemStats.learning }}%</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">Caffeine</span>
-                <div class="stat-bar">
-                <div class="stat-progress" :style="{ width: systemStats.coffee + '%' }"></div>
-                </div>
-                <span class="stat-value">{{ systemStats.coffee }}%</span>
-            </div>
+      <div class="system-stats">
+        <div class="stat-item">
+          <span class="stat-label">CPU (Problem Solving)</span>
+          <div class="stat-bar">
+            <div class="stat-progress" :style="{ width: systemStats.cpu + '%' }"></div>
+          </div>
+          <span class="stat-value">{{ systemStats.cpu }}%</span>
         </div>
+        <div class="stat-item">
+          <span class="stat-label">Memory (Curiosidad)</span>
+          <div class="stat-bar">
+            <div class="stat-progress" :style="{ width: systemStats.memory + '%' }"></div>
+          </div>
+          <span class="stat-value">{{ systemStats.memory }}%</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Creativity Engine</span>
+          <div class="stat-bar">
+            <div class="stat-progress" :style="{ width: systemStats.creativity + '%' }"></div>
+            </div>
+          <span class="stat-value">{{ systemStats.creativity }}%</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Learning Rate</span>
+          <div class="stat-bar">
+            <div class="stat-progress" :style="{ width: systemStats.learning + '%' }"></div>
+            </div>
+          <span class="stat-value">{{ systemStats.learning }}%</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Caffeine</span>
+          <div class="stat-bar">
+            <div class="stat-progress" :style="{ width: systemStats.coffee + '%' }"></div>
+            </div>
+          <span class="stat-value">{{ systemStats.coffee }}%</span>
+        </div>
+      </div>
     </div>
 </template>
 

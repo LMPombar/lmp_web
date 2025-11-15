@@ -1,7 +1,6 @@
 <template>
     <div class="status-widget experience-widget">
-        <h3 class="widget-title">👩‍💻 Experiencia profesional</h3>
-        <div class="experience-counter">
+      <div class="experience-counter">
         <div class="experience-item">
             <span class="experience-number">{{ experienceTime.years }}</span>
             <span class="experience-label">años</span>
@@ -28,9 +27,9 @@
         </div>
         </div>
         <div class="experience-start">
-        Trabajando desde: {{ experienceStartDate.toLocaleDateString('es-ES', { 
-            year: 'numeric', month: 'long', day: 'numeric' 
-        }) }}
+          Trabajando desde: {{ experienceStartDate.toLocaleDateString('es-ES', { 
+              year: 'numeric', month: 'long', day: 'numeric' 
+          }) }}
         </div>
     </div>
 </template>

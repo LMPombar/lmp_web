@@ -1,10 +1,14 @@
 <template>
   <div 
-    :class="['os-window', { maximized: isMaximized, minimized: isMinimized }]"
+    :class="['os-window', { maximized: isMaximized, minimized: isMinimized, dragging: isDragging }]"
     :style="windowStyles"
+    @mousedown="bringToFront"
   >
     <!-- Window Header -->
-    <div class="window-header">
+    <div 
+      class="window-header"
+      @mousedown="startDrag"
+    >
       <div class="window-title">
         <span class="window-icon">{{ icon }}</span>
         <span class="window-name">{{ title }}</span>
@@ -76,12 +80,29 @@ export default {
     height: {
       type: String,
       default: 'auto'
+    },
+    initialX: {
+      type: Number,
+      default: 0
+    },
+    initialY: {
+      type: Number,
+      default: 0
+    },
+    canDrag: {
+      type: Boolean,
+      default: true
     }
   },
   data() {
     return {
       isMaximized: false,
-      isMinimized: false
+      isMinimized: false,
+      isDragging: false,
+      currentX: this.initialX,
+      currentY: this.initialY,
+      initialMouseX: 0,
+      initialMouseY: 0
     };
   },
   computed: {
@@ -89,21 +110,67 @@ export default {
       if (this.isMaximized) {
         return {
           width: '100%',
-          height: '100%'
+          height: '100%',
+          position: 'absolute',
+          top: '0',
+          left: '0'
         };
       }
       return {
         width: this.width,
-        height: this.height
+        height: this.height,
+        position: 'absolute',
+        left: `${this.currentX}px`,
+        top: `${this.currentY}px`
       };
     }
   },
-  emits: ['close', 'minimize', 'maximize'],
+  emits: ['close', 'minimize', 'maximize', 'focus'],
   methods: {
     toggleMaximize() {
       this.isMaximized = !this.isMaximized;
       this.$emit('maximize', this.isMaximized);
+    },
+    
+    startDrag(e) {
+      if (!this.canDrag || this.isMaximized || e.target.closest('.window-btn')) {
+        return; // No arrastrar si está maximizada o si se clickeó un botón
+      }
+      
+      this.isDragging = true;
+      this.initialMouseX = e.clientX - this.currentX;
+      this.initialMouseY = e.clientY - this.currentY;
+      
+      document.addEventListener('mousemove', this.drag);
+      document.addEventListener('mouseup', this.stopDrag);
+      
+      e.preventDefault();
+    },
+    
+    drag(e) {
+      if (!this.isDragging) return;
+      
+      this.currentX = e.clientX - this.initialMouseX;
+      this.currentY = e.clientY - this.initialMouseY;
+      
+      e.preventDefault();
+    },
+    
+    stopDrag() {
+      this.isDragging = false;
+      document.removeEventListener('mousemove', this.drag);
+      document.removeEventListener('mouseup', this.stopDrag);
+    },
+    
+    bringToFront() {
+      this.$emit('focus');
     }
+  },
+  
+  beforeUnmount() {
+    // Limpiar event listeners si el componente se destruye durante el drag
+    document.removeEventListener('mousemove', this.drag);
+    document.removeEventListener('mouseup', this.stopDrag);
   }
 };
 </script>
@@ -117,8 +184,13 @@ export default {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transition: all 0.3s ease;
+  transition: box-shadow 0.3s ease;
   height: auto;
+}
+
+.os-window.dragging {
+  box-shadow: 0 12px 48px rgba(0, 255, 136, 0.3);
+  transition: none;
 }
 
 .os-window.maximized {
@@ -139,6 +211,7 @@ export default {
   justify-content: space-between;
   flex-shrink: 0;
   user-select: none;
+  cursor: move;
 }
 
 .window-title {

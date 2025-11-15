@@ -12,9 +12,13 @@
         :can-close="false"
         :can-minimize="true"
         :can-maximize="true"
+        :initial-x="50"
+        :initial-y="20"
+        width="600px"
         class="terminal-window"
         @minimize="minimizeApp('terminal')"
         @maximize="maximizeApp('terminal')"
+        @focus="focusApp('terminal')"
       >
         <div class="terminal-content" ref="terminalContent">
           
@@ -80,14 +84,18 @@
 
       <!-- GUI Apps Windows -->
       <OSWindow
-        v-for="app in openApps"
+        v-for="(app, index) in openApps"
         :key="app.id"
         :title="app.name"
         :icon="app.icon"
+        :initial-x="getAppInitialX(index)"
+        :initial-y="getAppInitialY(index)"
+        width="400px"
         :class="['app-window', `app-${app.id}`, { active: app.id === activeAppId }]"
         @close="closeApp(app.id)"
         @minimize="minimizeApp(app.id)"
         @maximize="maximizeApp(app.id)"
+        @focus="focusApp(app.id)"
       >
         <component :is="app.component" v-bind="app.props" />
       </OSWindow>
@@ -148,15 +156,15 @@ export default {
       availableApps: [
         {
           id: 'timer',
-          name: 'Experiencia',
-          icon: '⌚',
+          name: 'Experiencia Profesional',
+          icon: '👩‍💻',
           component: 'TimeCounter',
           props: {}
         },
         {
           id: 'status',
           name: 'Sistema',
-          icon: '📊',
+          icon: '⚡',
           component: 'SystemStatus',
           props: {}
         }
@@ -164,15 +172,15 @@ export default {
       openApps: [
         {
           id: 'timer',
-          name: 'Experiencia',
-          icon: '⌚',
+          name: 'Experiencia Profesional',
+          icon: '👩‍💻',
           component: 'TimeCounter',
           props: {}
         },
         {
           id: 'status',
           name: 'Sistema',
-          icon: '📊',
+          icon: '⚡',
           component: 'SystemStatus',
           props: {}
         }
@@ -768,6 +776,17 @@ export default {
     toggleAppsMenu() {
       // TODO: Aquí podríamos mostrar un menú con todas las apps disponibles
       console.log('Toggle apps menu');
+    },
+    
+    // Window positioning
+    getAppInitialX(index) {
+      // Posicionar apps en cascada
+      return 700 + (index * 40);
+    },
+    
+    getAppInitialY(index) {
+      // Posicionar apps en cascada
+      return 100 + (index * 40);
     }
   }
 }
@@ -817,30 +836,27 @@ export default {
   overflow: hidden;
   margin-bottom: 50px; /* Espacio para la taskbar fija */
   background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-  gap: 20px;
-  padding: 20px;
-  align-content: start;
-  align-items: start; /* Alinear ventanas al inicio */
 }
 
-/* Terminal Window - Ocupa más espacio por defecto */
+/* Terminal Window */
 .terminal-window {
-  grid-column: span 2;
   min-height: 500px;
-  max-height: 100%; /* Evitar que crezca demasiado */
+  max-height: calc(100vh - 120px);
 }
 
-/* App Windows - Sin altura mínima fija, se adaptan al contenido */
+/* App Windows - Se adaptan al contenido */
 .app-window {
-  height: fit-content;
-  max-height: calc(100vh - 120px); /* Altura máxima: viewport - header - taskbar - padding */
+  max-height: calc(100vh - 120px);
+  z-index: 1;
 }
 
 .app-window.active {
-  z-index: 10;
+  z-index: 10 !important;
   box-shadow: 0 12px 40px rgba(0, 255, 136, 0.2);
+}
+
+.terminal-window {
+  z-index: 2;
 }
 
 /* Terminal Content Styles */
@@ -979,18 +995,8 @@ export default {
 
 /* Responsive */
 @media (max-width: 1200px) {
-  .desktop-area {
-    grid-template-columns: 1fr;
-    padding: 15px;
-  }
-
   .terminal-window {
-    grid-column: span 1;
     min-height: 400px;
-  }
-  
-  .app-window {
-    height: fit-content;
   }
 }
 
@@ -999,18 +1005,8 @@ export default {
     padding: 0;
   }
   
-  .desktop-area {
-    padding: 10px;
-    gap: 10px;
-    grid-template-columns: 1fr;
-  }
-  
   .terminal-window {
     min-height: 300px;
-  }
-  
-  .app-window {
-    height: fit-content;
   }
   
   .terminal-content {

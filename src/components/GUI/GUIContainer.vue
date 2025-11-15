@@ -51,14 +51,14 @@ export default {
         {
           id: 'timer',
           name: 'Experiencia profesional',
-          icon: '⌚',
+          icon: '👩‍💻',
           component: 'TimeCounter',
           props: {}
         }, 
         {
           id: 'status',
           name: 'Estado del sistema',
-          icon: '📊',
+          icon: '⚡',
           component: 'SystemStatus',
           props: {} // props opcionales para el componente
         }
