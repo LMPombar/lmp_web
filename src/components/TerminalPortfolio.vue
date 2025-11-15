@@ -24,12 +24,10 @@
 
           <!-- Terminal Content -->
           <div class="terminal-content" ref="terminalContent">
+            
             <!-- Welcome ASCII Art -->
             <div class="welcome-section" v-if="showWelcome">
               <pre class="ascii-art">{{ asciiArt }}</pre>
-              <div class="welcome-text">
-                <p class="typing-text">{{ typedWelcome }}</p>
-              </div>
             </div>
 
             <!-- Command History -->
@@ -44,7 +42,10 @@
                   <span class="command">{{ entry.command }}</span>
                   <span v-if="isTypingCommand && index === commandHistory.length - 1" class="typing-cursor">_</span>
                 </div>
-                <div v-if="entry.output" class="command-output" v-html="formatOutput(entry.output)"></div>
+                <div v-if="entry.output && entry.output.type === 'component'" class="command-output">
+                  <component :is="entry.output.component" v-bind="entry.output.props" />
+                </div>
+                <div v-else-if="entry.output" class="command-output" v-html="formatOutput(entry.output)" />
               </div>
             </div>
 
@@ -81,16 +82,6 @@
                 📧 Contacto
               </button>
             </div>
-
-            <!-- Help Panel -->
-            <div v-if="showHelp" class="help-panel">
-              <h3>📖 Comandos Disponibles:</h3>
-              <div class="help-commands">
-                <div v-for="cmd in availableCommands" :key="cmd.name" class="help-item">
-                  <code>{{ cmd.name }}</code> - {{ cmd.description }}
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -103,10 +94,11 @@
 
 <script>
 import TerminalSidebar from './Sidebar/TerminalSidebar.vue'
+import HelpPanel from './HelpPanel.vue'
 
 export default {
   name: 'TerminalPortfolio',
-  components: { TerminalSidebar },
+  components: { TerminalSidebar, HelpPanel },
   data() {
     return {
       showWelcome: true,
@@ -357,7 +349,11 @@ export default {
           this.commandHistory = [];
           return ''
         case 'help':
-          return this.showHelp();
+          return {
+            type: 'component',
+            component: 'HelpPanel',
+            props: { availableCommands: this.availableCommands }
+          };
         case 'ps':
           return this.showProcesses();
         case 'neofetch':
@@ -426,12 +422,12 @@ export default {
 
     showProcesses() {
       return `
-    USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
-    laura     1001 85.2  15.3  2048  1024 pts/0    R+   09:00   2:30 python
-    laura     1002 75.0  12.1  1536   768 pts/1    S    09:15   1:45 docker
-    laura     1003 68.3  10.2  1280   512 pts/2    S    09:30   1:20 vue
-    laura     1004 45.1   8.4  1024   256 pts/3    S    10:00   0:45 devops
-    laura     1005 32.7   6.1   768   128 pts/4    S    10:30   0:30 ai-ml
+    USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME  COMMAND
+    laura     1001 85.2  15.3  2048  1024 pts/0    R+   09:00   2:30  python
+    laura     1002 75.0  12.1  1536   768 pts/1    S    09:15   1:45  docker
+    laura     1003 68.3  10.2  1280   512 pts/2    S    09:30   1:20  vue
+    laura     1004 45.1   8.4  1024   256 pts/3    S    10:00   0:45  devops
+    laura     1005 32.7   6.1   768   128 pts/4    S    10:30   0:30  ai-ml
       `;
     },
 
@@ -489,7 +485,29 @@ export default {
       }
     },
 
-    toggleHelp() { this.showHelp = !this.showHelp; },
+    showHelpMessage() {
+      let helpContent = '';
+      for (const cmd of this.availableCommands) {
+        helpContent += `<code>${cmd.name}</code> - ${cmd.description}\n`;
+      };
+
+      return `
+      <div v-if="showHelp" class="help-panel">
+        <h3>📖 Comandos Disponibles:</h3>
+        <pre>${helpContent}</pre>
+      </div>`;
+    },
+
+    toggleHelp() { 
+      this.commandHistory.push({
+        prompt: this.currentPrompt,
+        command: 'help',
+        output: this.processCommand('help')
+      });
+      
+      this.scrollToBottom();
+      this.focusInput();
+    },
 
     toggleGUIMode() { this.isGUIMode = !this.isGUIMode; },
 
@@ -750,38 +768,6 @@ export default {
 .quick-btn:hover {
   background: rgba(0, 255, 136, 0.2);
   transform: translateY(-1px);
-}
-
-.help-panel {
-  background: rgba(0, 123, 255, 0.05);
-  border: 1px solid rgba(0, 123, 255, 0.2);
-  border-radius: 6px;
-  padding: 15px;
-  margin: 20px 0;
-}
-
-.help-panel h3 {
-  color: #007bff;
-  margin-bottom: 10px;
-  font-size: 16px;
-}
-
-.help-commands {
-  display: grid;
-  gap: 8px;
-}
-
-.help-item {
-  color: #ccc;
-  font-size: 13px;
-}
-
-.help-item code {
-  color: #ffbd2e;
-  background: rgba(255, 189, 46, 0.1);
-  padding: 2px 6px;
-  border-radius: 3px;
-  font-family: inherit;
 }
 
 .neofetch, .system-info {
