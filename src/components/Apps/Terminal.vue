@@ -569,7 +569,7 @@ export default {
 
 .ascii-art {
   color: #00ff88;
-  font-size: 12px;
+  font-size: 11px;
   line-height: 1.2;
   margin-bottom: 20px;
   text-align: center;
@@ -613,6 +613,7 @@ export default {
   margin: 20px 0 !important;
   font-family: inherit;
   line-height: 1.4;
+  font-size: 14px;
 }
 
 .input-line {
@@ -632,7 +633,7 @@ export default {
   border: none;
   color: #ffbd2e;
   font-family: inherit;
-  font-size: 16px;
+  font-size: 14px;
   outline: none;
   flex: 1;
   margin-left: 5px !important;
@@ -663,7 +664,7 @@ export default {
   border-radius: 4px;
   cursor: pointer;
   font-family: inherit;
-  font-size: 12px;
+  font-size: 11px;
   transition: all 0.3s;
   text-align: center;
 }

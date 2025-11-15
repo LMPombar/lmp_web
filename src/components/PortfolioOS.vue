@@ -9,6 +9,7 @@
       <OSWindow
         v-for="(app, index) in openApps"
         :key="app.id"
+        v-show="!minimizedApps.includes(app.id)"
         :title="app.name"
         :icon="app.icon"
         :can-close="app.canClose !== false"
@@ -40,10 +41,10 @@
     
     <!-- Taskbar (Barra inferior) -->
     <Taskbar 
-      :open-apps="allOpenApps"
+      :open-apps="openApps"
       :active-app-id="activeAppId"
       :minimized-apps="minimizedApps"
-      :available-apps="allAvailableApps"
+      :available-apps="availableApps"
       @focus-app="focusApp"
       @restore-app="restoreApp"
       @toggle-apps="toggleAppsMenu"
@@ -87,16 +88,7 @@ export default {
   },
 
   computed: {
-    // Todas las apps abiertas (incluyendo minimizadas)
-    allOpenApps() {
-      return [...this.openApps, ...this.minimizedApps.map(id => 
-        this.availableApps.find(app => app.id === id)
-      ).filter(Boolean)];
-    },
-    
-    allAvailableApps() {
-      return this.availableApps;
-    }
+    // Aquí se pueden añadir computed properties si es necesario
   },
 
   provide() {
@@ -135,29 +127,34 @@ export default {
     },
     
     minimizeApp(appId) {
-      // Añadir a minimizados si no está ya
+      console.log('🔽 Minimizando app:', appId);
+      console.log('📋 openApps ANTES:', this.openApps.map(a => a.id));
+      console.log('📋 minimizedApps ANTES:', this.minimizedApps);
+      
+      // Añadir a minimizados (usar spread para reactividad garantizada)
       if (!this.minimizedApps.includes(appId)) {
-        this.minimizedApps.push(appId);
+        this.minimizedApps = [...this.minimizedApps, appId];
       }
       
-      // Quitar de la vista
-      this.openApps = this.openApps.filter(app => app.id !== appId);
+      // NO quitamos de openApps, solo la ocultamos con v-show
+      
+      console.log('📋 openApps DESPUÉS:', this.openApps.map(a => a.id));
+      console.log('📋 minimizedApps DESPUÉS:', this.minimizedApps);
+      
+      // Si era la app activa, cambiar el foco a otra app NO minimizada
+      if (this.activeAppId === appId) {
+        const nonMinimizedApps = this.openApps.filter(app => !this.minimizedApps.includes(app.id));
+        this.activeAppId = nonMinimizedApps.length > 0 ? nonMinimizedApps[0].id : null;
+      }
     },
     
     restoreApp(appId) {
-      // Buscar la app en availableApps
-      const app = this.availableApps.find(a => a.id === appId);
-      if (!app) return;
+      console.log('🔼 Restaurando app:', appId);
       
-      // Quitar de minimizados
+      // Solo quitar de minimizados (la app ya está en openApps)
       this.minimizedApps = this.minimizedApps.filter(id => id !== appId);
       
-      // Añadir a openApps si no está
-      if (!this.openApps.find(a => a.id === appId)) {
-        this.openApps.push(app);
-      }
-      
-      // Enfocar
+      // Enfocar la app restaurada
       this.focusApp(appId);
     },
     
@@ -182,13 +179,16 @@ export default {
     
     // Window positioning
     getAppInitialX(index) {
-      // Posicionar apps en cascada
-      return 50 + (index * 40);
+      // Distribución horizontal equidistante
+      // Terminal: 50px, TimeCounter: 450px, SystemStatus: 850px
+      const positions = [50, 450, 850, 1250];
+      return positions[index] || 50 + (index * 400);
     },
     
     getAppInitialY(index) {
-      // Posicionar apps en cascada
-      return 20 + (index * 40);
+      // Todas las ventanas a la misma altura para que se vean claramente
+      const positions = [20, 20, 20, 20];
+      return positions[index] || 20;
     }
   }
 }
@@ -199,6 +199,7 @@ export default {
   height: 100vh;
   background: #0a0a0a;
   font-family: 'Fira Code', 'Courier New', monospace;
+  font-size: 14px;
   padding: 0;
   overflow: hidden;
   display: flex;

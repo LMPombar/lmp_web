@@ -45,13 +45,12 @@ export default {
   },
   computed: {
     allApps() {
-      // Combinar apps abiertas con minimizadas
-      const openAppIds = this.openApps.map(app => app.id);
-      const minimizedAppsList = this.minimizedApps
-        .map(id => this.availableApps.find(app => app.id === id))
-        .filter(app => app && !openAppIds.includes(app.id));
+      // Simplemente usar openApps ya que ahora incluye también las minimizadas
+      console.log('🎯 Taskbar - openApps:', this.openApps.map(a => a.id));
+      console.log('🎯 Taskbar - minimizedApps:', this.minimizedApps);
+      console.log('🎯 Taskbar - allApps:', this.openApps.map(a => a.id));
       
-      return [...this.openApps, ...minimizedAppsList];
+      return this.openApps;
     }
   },
   emits: ['focus-app', 'restore-app', 'toggle-apps'],
