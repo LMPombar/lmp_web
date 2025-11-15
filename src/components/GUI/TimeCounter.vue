@@ -102,7 +102,7 @@ export default {
   border: var(--widget-border);
   border-radius: var(--widget-border-radius);
   padding: var(--widget-padding);
-  margin-bottom: var(--widget-margin);
+  margin-bottom: 0;
   box-shadow: var(--widget-shadow);
 }
 

@@ -97,7 +97,10 @@
     <Taskbar 
       :open-apps="allOpenApps"
       :active-app-id="activeAppId"
+      :minimized-apps="minimizedApps"
+      :available-apps="allAvailableApps"
       @focus-app="focusApp"
+      @restore-app="restoreApp"
       @toggle-apps="toggleAppsMenu"
     />
   </div>
@@ -141,6 +144,23 @@ export default {
       showRealInput: false,
       
       // OS state
+      // Lista completa de apps disponibles
+      availableApps: [
+        {
+          id: 'timer',
+          name: 'Experiencia',
+          icon: '⌚',
+          component: 'TimeCounter',
+          props: {}
+        },
+        {
+          id: 'status',
+          name: 'Sistema',
+          icon: '📊',
+          component: 'SystemStatus',
+          props: {}
+        }
+      ],
       openApps: [
         {
           id: 'timer',
@@ -157,20 +177,19 @@ export default {
           props: {}
         }
       ],
+      minimizedApps: [], // IDs de apps minimizadas
       activeAppId: 'terminal',
 
       asciiArt: `
- █     █░▓█████  ██▓     ▄████▄   ▒█████   ███▄ ▄███▓▓█████  ▐██▌
-▓█░ █ ░█░▓█   ▀ ▓██▒    ▒██▀ ▀█  ▒██▒  ██▒▓██▒▀█▀ ██▒▓█   ▀  ▐██▌
-▒█░ █ ░█ ▒███   ▒██░    ▒▓█    ▄ ▒██░  ██▒▓██    ▓██░▒███    ▐██▌
-░█░ █ ░█ ▒▓█  ▄ ▒██░    ▒▓▓▄ ▄██▒▒██   ██░▒██    ▒██ ▒▓█  ▄  ▓██▒
-░░██▒██▓ ░▒████▒░██████▒▒ ▓███▀ ░░ ████▓▒░▒██▒   ░██▒░▒████▒ ▒▄▄ 
-░ ▓░▒ ▒  ░░ ▒░ ░░ ▒░▓  ░░ ░▒ ▒  ░░ ▒░▒░▒░ ░ ▒░   ░  ░░░ ▒░ ░ ░▀▀▒
-  ▒ ░ ░   ░ ░  ░░ ░ ▒  ░  ░  ▒     ░ ▒ ▒░ ░  ░      ░ ░ ░  ░ ░  ░
-  ░   ░     ░     ░ ░   ░        ░ ░ ░ ▒  ░      ░      ░       ░
-    ░       ░  ░    ░  ░░ ░          ░ ░         ░      ░  ░ ░   
-                        ░                                        
-`,
+ ██▓     ▄▄▄       █    ██  ██▀███   ▄▄▄       ▒█████    ██████ 
+▓██▒    ▒████▄     ██  ▓██▒▓██ ▒ ██▒▒████▄    ▒██▒  ██▒▒██    ▒ 
+▒██░    ▒██  ▀█▄  ▓██  ▒██░▓██ ░▄█ ▒▒██  ▀█▄  ▒██░  ██▒░ ▓██▄   
+▒██░    ░██▄▄▄▄██ ▓▓█  ░██░▒██▀▀█▄  ░██▄▄▄▄██ ▒██   ██░  ▒   ██▒
+░██████▒ ▓█   ▓██▒▒▒█████▓ ░██▓ ▒██▒ ▓█   ▓██▒░ ████▓▒░▒██████▒▒
+░ ▒░▓  ░ ▒▒   ▓▒█░░▒▓▒ ▒ ▒ ░ ▒▓ ░▒▓░ ▒▒   ▓▒█░░ ▒░▒░▒░ ▒ ▒▓▒ ▒ ░
+░ ░ ▒  ░  ▒   ▒▒ ░░░▒░ ░ ░   ░▒ ░ ▒░  ▒   ▒▒ ░  ░ ▒ ▒░ ░ ░▒  ░ ░
+  ░ ░     ░   ▒    ░░░ ░ ░   ░░   ░   ░   ▒   ░ ░ ░ ▒  ░  ░  ░  
+    ░  ░      ░  ░   ░        ░           ░  ░    ░ ░        ░  `,
 
       welcomeMessage: '¡Bienvenidos a mi portfolio digital! 👩‍💻\nSoy Laura, Backend Developer con interés en DevOps, IA y Frontend.\nEscribe "help" para ver comandos disponibles o usa los botones. 🚀',
 
@@ -269,6 +288,17 @@ export default {
           icon: '💻'
         },
         ...this.openApps
+      ];
+    },
+    allAvailableApps() {
+      // Todas las apps incluyendo terminal
+      return [
+        {
+          id: 'terminal',
+          name: 'Terminal',
+          icon: '💻'
+        },
+        ...this.availableApps
       ];
     }
   },
@@ -475,7 +505,6 @@ export default {
 <span style="color: #00ff88;">│</span> <span style="color: #007bff;">🤖 IA & Data:</span>     <span style="color: #fff;">Machine Learning, Data Analysis, LLMs</span>   <span style="color: #00ff88;">│</span>
 <span style="color: #00ff88;">│</span> <span style="color: #007bff;">🎨 Frontend:</span>      <span style="color: #fff;">Vue.js, JavaScript, CSS (aprendiendo!)</span>  <span style="color: #00ff88;">│</span>
 <span style="color: #00ff88;">├─ EXPERIENCIA ─────────────────────────────────────────────┤</span>
-<span style="color: #00ff88;">│</span> <span style="color: #ff9800;">⏱️  Años codificando:</span> <span style="color: #fff;">8+ años</span>                           <span style="color: #00ff88;">│</span>
 <span style="color: #00ff88;">│</span> <span style="color: #ff9800;">🎓 Formación:</span>        <span style="color: #fff;">Autodidacta y en constante aprendizaje</span> <span style="color: #00ff88;">│</span>
 <span style="color: #00ff88;">│</span> <span style="color: #ff9800;">🔥 Pasión:</span>           <span style="color: #fff;">Resolver problemas complejos</span>           <span style="color: #00ff88;">│</span>
 <span style="color: #00ff88;">╰───────────────────────────────────────────────────────────╯</span>
@@ -686,11 +715,40 @@ export default {
     // OS methods
     closeApp(appId) {
       this.openApps = this.openApps.filter(app => app.id !== appId);
+      this.minimizedApps = this.minimizedApps.filter(id => id !== appId);
     },
     
     minimizeApp(appId) {
-      // TODO: Implementar lógica de minimizar
-      console.log('Minimize app:', appId);
+      if (appId === 'terminal') return; // No minimizar terminal
+      
+      // Añadir a minimizados si no está ya
+      if (!this.minimizedApps.includes(appId)) {
+        this.minimizedApps.push(appId);
+      }
+      
+      // Quitar de la vista
+      this.openApps = this.openApps.filter(app => app.id !== appId);
+      
+      // Si era la app activa, cambiar a terminal
+      if (this.activeAppId === appId) {
+        this.activeAppId = 'terminal';
+      }
+    },
+    
+    restoreApp(appId) {
+      // Buscar la app en la lista de disponibles
+      const app = this.availableApps.find(a => a.id === appId);
+      
+      if (app && !this.openApps.find(a => a.id === appId)) {
+        // Añadir a apps abiertas
+        this.openApps.push(app);
+        
+        // Quitar de minimizados
+        this.minimizedApps = this.minimizedApps.filter(id => id !== appId);
+        
+        // Hacer foco en la app restaurada
+        this.focusApp(appId);
+      }
     },
     
     maximizeApp(appId) {
@@ -700,7 +758,11 @@ export default {
     
     focusApp(appId) {
       this.activeAppId = appId;
-      // TODO: Aquí podríamos añadir lógica para traer la app al frente (z-index)
+      
+      // Si el app está minimizada, restaurarla
+      if (this.minimizedApps.includes(appId)) {
+        this.restoreApp(appId);
+      }
     },
     
     toggleAppsMenu() {
@@ -760,30 +822,25 @@ export default {
   gap: 20px;
   padding: 20px;
   align-content: start;
+  align-items: start; /* Alinear ventanas al inicio */
 }
 
 /* Terminal Window - Ocupa más espacio por defecto */
 .terminal-window {
   grid-column: span 2;
   min-height: 500px;
+  max-height: 100%; /* Evitar que crezca demasiado */
 }
 
-/* App Windows */
+/* App Windows - Sin altura mínima fija, se adaptan al contenido */
 .app-window {
-  min-height: 400px;
+  height: fit-content;
+  max-height: calc(100vh - 120px); /* Altura máxima: viewport - header - taskbar - padding */
 }
 
 .app-window.active {
   z-index: 10;
   box-shadow: 0 12px 40px rgba(0, 255, 136, 0.2);
-}
-
-/* Terminal Content Styles */
-.terminal-content {
-  padding: 20px;
-  flex: 1;
-  overflow-y: auto;
-  background: #0a0a0a;
 }
 
 /* Terminal Content Styles */
@@ -933,7 +990,7 @@ export default {
   }
   
   .app-window {
-    min-height: 350px;
+    height: fit-content;
   }
 }
 
@@ -948,9 +1005,12 @@ export default {
     grid-template-columns: 1fr;
   }
   
-  .terminal-window,
-  .app-window {
+  .terminal-window {
     min-height: 300px;
+  }
+  
+  .app-window {
+    height: fit-content;
   }
   
   .terminal-content {

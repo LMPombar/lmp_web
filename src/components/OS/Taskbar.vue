@@ -2,13 +2,15 @@
   <div class="taskbar">
     <div class="taskbar-apps">
       <button
-        v-for="app in openApps"
+        v-for="app in allApps"
         :key="app.id"
-        :class="['taskbar-app', { active: app.id === activeAppId }]"
-        @click="$emit('focus-app', app.id)"
+        :class="['taskbar-app', { active: app.id === activeAppId && !isMinimized(app.id), minimized: isMinimized(app.id) }]"
+        @click="handleAppClick(app.id)"
+        :title="isMinimized(app.id) ? `Restaurar ${app.name}` : app.name"
       >
         <span class="app-icon">{{ app.icon }}</span>
         <span class="app-name">{{ app.name }}</span>
+        <span v-if="isMinimized(app.id)" class="minimized-indicator">─</span>
       </button>
     </div>
     
@@ -31,9 +33,42 @@ export default {
     activeAppId: {
       type: String,
       default: null
+    },
+    minimizedApps: {
+      type: Array,
+      default: () => []
+    },
+    availableApps: {
+      type: Array,
+      default: () => []
     }
   },
-  emits: ['focus-app', 'toggle-apps']
+  computed: {
+    allApps() {
+      // Combinar apps abiertas con minimizadas
+      const openAppIds = this.openApps.map(app => app.id);
+      const minimizedAppsList = this.minimizedApps
+        .map(id => this.availableApps.find(app => app.id === id))
+        .filter(app => app && !openAppIds.includes(app.id));
+      
+      return [...this.openApps, ...minimizedAppsList];
+    }
+  },
+  emits: ['focus-app', 'restore-app', 'toggle-apps'],
+  methods: {
+    isMinimized(appId) {
+      return this.minimizedApps.includes(appId);
+    },
+    handleAppClick(appId) {
+      if (this.isMinimized(appId)) {
+        // Si está minimizada, restaurar
+        this.$emit('restore-app', appId);
+      } else {
+        // Si está abierta, hacer foco
+        this.$emit('focus-app', appId);
+      }
+    }
+  }
 };
 </script>
 
@@ -86,6 +121,23 @@ export default {
   background: rgba(0, 255, 136, 0.3);
   border-color: var(--primary-color);
   box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+}
+
+.taskbar-app.minimized {
+  background: rgba(255, 189, 46, 0.1);
+  border-color: rgba(255, 189, 46, 0.3);
+  opacity: 0.7;
+}
+
+.taskbar-app.minimized:hover {
+  background: rgba(255, 189, 46, 0.2);
+  opacity: 1;
+}
+
+.minimized-indicator {
+  font-size: 10px;
+  color: var(--accent-color);
+  margin-left: 4px;
 }
 
 .app-icon {

@@ -75,7 +75,7 @@ export default {
     },
     height: {
       type: String,
-      default: '100%'
+      default: 'auto'
     }
   },
   data() {
@@ -118,10 +118,12 @@ export default {
   flex-direction: column;
   overflow: hidden;
   transition: all 0.3s ease;
+  height: auto;
 }
 
 .os-window.maximized {
   border-radius: 0;
+  height: 100%;
 }
 
 .os-window.minimized {
@@ -131,7 +133,7 @@ export default {
 .window-header {
   background: #2d2d2d;
   border-bottom: 1px solid var(--border-color);
-  padding: 8px 12px;
+  padding: 2px 10px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -198,9 +200,10 @@ export default {
 }
 
 .window-content {
-  flex: 1;
+  flex: 0 1 auto;
   overflow: auto;
   background: #0a0a0a;
+  max-height: calc(100vh - 150px);
 }
 
 @media (max-width: 768px) {

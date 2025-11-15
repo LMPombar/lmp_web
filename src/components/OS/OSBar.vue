@@ -4,6 +4,10 @@
       <span class="os-icon">🖥️</span>
       <span class="os-name">Laura OS</span>
     </div>
+
+    <div class="welcome-section">
+      <pre class="ascii-art">{{ welcome }}</pre>
+    </div>
     
     <div class="os-info">
       <span class="os-time">{{ currentTime }}</span>
@@ -18,6 +22,10 @@ export default {
   data() {
     return {
       currentTime: '',
+      welcome: `
+╦ ╦┌─┐┬  ┌─┐┌─┐┌┬┐┌─┐
+║║║├┤ │  │  │ ││││├┤ 
+╚╩╝└─┘┴─┘└─┘└─┘┴ ┴└─┘`,
       systemStatus: '✓ Online'
     };
   },
@@ -98,5 +106,13 @@ export default {
     gap: 10px;
     font-size: 11px;
   }
+}
+
+.ascii-art {
+  color: #d9d9d9;
+  font-size: 10px;
+  line-height: 1.2;
+  margin-bottom: 10px;
+  text-align: center;
 }
 </style>
