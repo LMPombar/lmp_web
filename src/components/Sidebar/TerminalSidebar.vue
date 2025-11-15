@@ -1,42 +1,44 @@
 <template>
-    <div class="status-column">
-        <TimeCounter />
-        <TechStack />
-        <SystemStatus />
-        <CurrentStatus />
-    </div>
+  <div class="status-column">
+    <TimeCounter />
+    <!-- <TechStack /> -->
+    <TechStackTreemap />
+    <SystemStatus />
+    <CurrentStatus />
+  </div>
 </template>
 
 <script>
 import TimeCounter from './TimeCounter.vue'
-import TechStack from './TechStack.vue'
+//import TechStack from './TechStack.vue'
+import TechStackTreemap from './TechStackTreemap.vue';
 import SystemStatus from './SystemStatus.vue'
 import CurrentStatus from './CurrentStatus.vue'
 
 export default {
     name: 'TerminalSidebar',
     components: {
-        TimeCounter,
-        TechStack,
-        SystemStatus,
-        CurrentStatus
+      TimeCounter,
+      //TechStack,
+      TechStackTreemap,
+      SystemStatus,
+      CurrentStatus
     },
     data() {
-        return {}
+      return {}
     }
 }
 </script>
 
 <style scoped>
 .status-column {
-  width: 400px;
+  width: 600px;
   background: #111;
   border-left: 2px solid #333;
   padding: 20px;
   overflow-y: auto;
   flex-shrink: 0;
 }
-
 
 /* Responsive */
 @media (max-width: 1200px) {  
