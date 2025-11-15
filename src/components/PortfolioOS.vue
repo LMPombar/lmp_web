@@ -101,6 +101,13 @@
       </OSWindow>
     </div>
     
+    <!-- App Registry - Componentes ocultos para auto-registro -->
+    <div style="display: none;">
+      <TimeCounter />
+      <SystemStatus />
+      <!-- Añade aquí nuevas apps para que se auto-registren -->
+    </div>
+    
     <!-- Taskbar (Barra inferior) -->
     <Taskbar 
       :open-apps="allOpenApps"
@@ -151,41 +158,10 @@ export default {
       isTypingCommand: false,
       showRealInput: false,
       
-      // OS state
-      // Lista completa de apps disponibles
-      availableApps: [
-        {
-          id: 'timer',
-          name: 'Experiencia Profesional',
-          icon: '👩‍💻',
-          component: 'TimeCounter',
-          props: {}
-        },
-        {
-          id: 'status',
-          name: 'Sistema',
-          icon: '⚡',
-          component: 'SystemStatus',
-          props: {}
-        }
-      ],
-      openApps: [
-        {
-          id: 'timer',
-          name: 'Experiencia Profesional',
-          icon: '👩‍💻',
-          component: 'TimeCounter',
-          props: {}
-        },
-        {
-          id: 'status',
-          name: 'Sistema',
-          icon: '⚡',
-          component: 'SystemStatus',
-          props: {}
-        }
-      ],
-      minimizedApps: [], // IDs de apps minimizadas
+      // OS state - Apps registradas dinámicamente
+      availableApps: [], // Se llena automáticamente cuando las apps se montan
+      openApps: [],
+      minimizedApps: [],
       activeAppId: 'terminal',
 
       asciiArt: `
@@ -311,6 +287,13 @@ export default {
     }
   },
 
+  provide() {
+    return {
+      registerApp: this.registerApp,
+      unregisterApp: this.unregisterApp
+    };
+  },
+
   mounted() {
     this.addInitialCommands();
   },
@@ -320,6 +303,27 @@ export default {
   },
 
   methods: {
+    // App Registry Methods
+    registerApp(appInfo) {
+      // Verificar que no esté ya registrada
+      if (!this.availableApps.find(app => app.id === appInfo.id)) {
+        this.availableApps.push(appInfo);
+        console.log(`📱 App registrada: ${appInfo.name} (${appInfo.id})`);
+        
+        // Auto-abrir la app cuando se registra (comportamiento inicial)
+        if (!this.openApps.find(app => app.id === appInfo.id)) {
+          this.openApps.push(appInfo);
+        }
+      }
+    },
+    
+    unregisterApp(appId) {
+      this.availableApps = this.availableApps.filter(app => app.id !== appId);
+      this.openApps = this.openApps.filter(app => app.id !== appId);
+      this.minimizedApps = this.minimizedApps.filter(id => id !== appId);
+      console.log(`📱 App des-registrada: ${appId}`);
+    },
+    
     addInitialCommands() {
       if (this.initialized) return;
       // Primero mostrar el prompt vacío

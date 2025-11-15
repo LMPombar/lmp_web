@@ -37,60 +37,73 @@
 <script>
 export default {
     name: 'TimeCounter',
+    inject: {
+      registerApp: { default: null },
+      unregisterApp: { default: null }
+    },
     data() {
-        return {
-            experienceStartDate: new Date('2016-03-15T08:00:00'),
-            experienceTime: {
-                years: 0,
-                months: 0,
-                days: 0,
-                hours: 0,
-                minutes: 0, 
-                seconds: 0,
-            },
-            experienceTimer: null,
-        }
+      return {
+        appInfo: {
+          id: 'timer',
+          name: 'Experiencia profesional',
+          icon: '👩‍💻',
+          component: 'TimeCounter',
+          props: {}
+        },
+        experienceStartDate: new Date('2016-03-15T08:00:00'),
+        experienceTime: {
+          years: 0,
+          months: 0,
+          days: 0,
+          hours: 0,
+          minutes: 0, 
+          seconds: 0,
+        },
+        experienceTimer: null,
+      }
     },
     mounted() {
-        this.calculateExperienceTime();
-        this.experienceTimer = setInterval(this.calculateExperienceTime, 1000); // Actualiza cada segundo
+      // Auto-registrar la app en el sistema
+      if (this.registerApp) {
+        this.registerApp(this.appInfo);
+      }
+      
+      this.calculateExperienceTime();
+      this.experienceTimer = setInterval(this.calculateExperienceTime, 1000); // Actualiza cada segundo
     },
     beforeUnmount() {
-        if (this.experienceTimer) {
-            clearInterval(this.experienceTimer);
-        }
+      // Des-registrar la app al desmontar
+      if (this.unregisterApp) {
+        this.unregisterApp(this.appInfo.id);
+      }
+      
+      if (this.experienceTimer) {
+        clearInterval(this.experienceTimer);
+      }
     },
     methods: {
-        calculateExperienceTime() {
-            const now = new Date();
-            let delta = Math.floor((now - this.experienceStartDate) / 1000); // Diferencia en segundos
+      calculateExperienceTime() {
+        const now = new Date();
+        let delta = Math.floor((now - this.experienceStartDate) / 1000); // Diferencia en segundos
 
-            this.experienceTime.years = Math.floor(delta / (365 * 24 * 60 * 60));
-            delta -= this.experienceTime.years * 365 * 24 * 60 * 60;
+        this.experienceTime.years = Math.floor(delta / (365 * 24 * 60 * 60));
+        delta -= this.experienceTime.years * 365 * 24 * 60 * 60;
 
-            this.experienceTime.months = Math.floor(delta / (30 * 24 * 60 * 60));
-            delta -= this.experienceTime.months * 30 * 24 * 60 * 60;
+        this.experienceTime.months = Math.floor(delta / (30 * 24 * 60 * 60));
+        delta -= this.experienceTime.months * 30 * 24 * 60 * 60;
 
-            this.experienceTime.days = Math.floor(delta / (24 * 60 * 60));
-            delta -= this.experienceTime.days * 24 * 60 * 60;
+        this.experienceTime.days = Math.floor(delta / (24 * 60 * 60));
+        delta -= this.experienceTime.days * 24 * 60 * 60;
 
-            this.experienceTime.hours = Math.floor(delta / (60 * 60));
-            delta -= this.experienceTime.hours * 60 * 60;
+        this.experienceTime.hours = Math.floor(delta / (60 * 60));
+        delta -= this.experienceTime.hours * 60 * 60;
 
-            this.experienceTime.minutes = Math.floor(delta / 60);
-            delta -= this.experienceTime.minutes * 60;
+        this.experienceTime.minutes = Math.floor(delta / 60);
+        delta -= this.experienceTime.minutes * 60;
 
-            this.experienceTime.seconds = delta;
-        }
-    },
-    
-    // Experience counter methods
-    startExperienceTimer() {
-      this.updateExperienceTime();
-      this.experienceTimer = setInterval(() => {
-        this.updateExperienceTime();
-      }, 1000); // Update every second
-    },
+        this.experienceTime.seconds = delta;
+      }
+    }
 }
 </script>
 

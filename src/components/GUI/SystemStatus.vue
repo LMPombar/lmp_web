@@ -43,8 +43,19 @@
 <script>
 export default {
     name: 'SystemStatus',
+    inject: {
+      registerApp: { default: null },
+      unregisterApp: { default: null }
+    },
     data() {
         return {
+            appInfo: {
+              id: 'status',
+              name: 'Sistema',
+              icon: '⚡',
+              component: 'SystemStatus',
+              props: {}
+            },
             // System stats (dynamic)
             systemStats: {
                 cpu: 85,
@@ -56,7 +67,18 @@ export default {
         }
     },
     mounted() {
+        // Auto-registrar la app en el sistema
+        if (this.registerApp) {
+          this.registerApp(this.appInfo);
+        }
+        
         this.startSystemStatsAnimation()
+    },
+    beforeUnmount() {
+        // Des-registrar la app al desmontar
+        if (this.unregisterApp) {
+          this.unregisterApp(this.appInfo.id);
+        }
     },
     methods: {
         startSystemStatsAnimation() {
