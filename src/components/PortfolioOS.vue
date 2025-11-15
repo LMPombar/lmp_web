@@ -5,93 +5,22 @@
     
     <!-- Desktop Area - Todas las ventanas flotando aquí -->
     <div class="desktop-area">
-      <!-- Terminal Window -->
-      <OSWindow 
-        title="Terminal"
-        icon="💻"
-        :can-close="false"
-        :can-minimize="true"
-        :can-maximize="true"
-        :initial-x="50"
-        :initial-y="20"
-        width="600px"
-        class="terminal-window"
-        @minimize="minimizeApp('terminal')"
-        @maximize="maximizeApp('terminal')"
-        @focus="focusApp('terminal')"
-      >
-        <div class="terminal-content" ref="terminalContent">
-          
-          <!-- Welcome ASCII Art -->
-          <div class="welcome-section" v-if="showWelcome">
-            <pre class="ascii-art">{{ asciiArt }}</pre>
-          </div>
-
-          <!-- Command History -->
-          <div class="command-history">
-            <div 
-              v-for="(entry, index) in commandHistory" 
-              :key="index" 
-              class="command-entry"
-            >
-              <div class="command-line">
-                <span class="prompt">{{ entry.prompt }}</span>
-                <span class="command">{{ entry.command }}</span>
-                <span v-if="isTypingCommand && index === commandHistory.length - 1" class="typing-cursor">_</span>
-              </div>
-              <div v-if="entry.output && entry.output.type === 'component'" class="command-output">
-                <component :is="entry.output.component" v-bind="entry.output.props" />
-              </div>
-              <div v-else-if="entry.output" class="command-output" v-html="formatOutput(entry.output)" />
-            </div>
-          </div>
-
-          <!-- Current Input Line -->
-          <div v-if="showRealInput" class="input-line">
-            <span class="prompt">{{ currentPrompt }}</span>
-            <input 
-              v-model="currentCommand"
-              @keyup.enter="executeCommand"
-              @keydown.tab.prevent="autocomplete"
-              @keyup.up="previousCommand"
-              @keyup.down="nextCommand"
-              ref="commandInput"
-              class="command-input"
-              :placeholder="isGUIMode ? 'Escribe un comando o usa los botones...' : 'Escribe help para ver comandos disponibles...'"
-            >
-          </div>
-
-          <!-- Quick Action Buttons (GUI Mode) -->
-          <div v-if="isGUIMode && showRealInput" class="quick-actions">
-            <button @click="executeQuickCommand('ls')" class="quick-btn">
-              📁 Explorar
-            </button>
-            <button @click="executeQuickCommand('cat about.txt')" class="quick-btn">
-              👤 Sobre Mí
-            </button>
-            <button @click="executeQuickCommand('ls projects/')" class="quick-btn">
-              💼 Proyectos
-            </button>
-            <button @click="executeQuickCommand('cat skills.json')" class="quick-btn">
-              🛠️ Skills
-            </button>
-            <button @click="executeQuickCommand('mail')" class="quick-btn">
-              📧 Contacto
-            </button>
-          </div>
-        </div>
-      </OSWindow>
-
-      <!-- GUI Apps Windows -->
+      <!-- Todas las Apps (incluida Terminal) -->
       <OSWindow
         v-for="(app, index) in openApps"
         :key="app.id"
         :title="app.name"
         :icon="app.icon"
-        :initial-x="getAppInitialX(index)"
-        :initial-y="getAppInitialY(index)"
-        width="400px"
-        :class="['app-window', `app-${app.id}`, { active: app.id === activeAppId }]"
+        :can-close="app.canClose !== false"
+        :can-minimize="true"
+        :can-maximize="true"
+        :initial-x="app.initialX || getAppInitialX(index)"
+        :initial-y="app.initialY || getAppInitialY(index)"
+        :width="app.width || '400px'"
+        :class="['app-window', `app-${app.id}`, { 
+          active: app.id === activeAppId,
+          'terminal-window': app.id === 'terminal'
+        }]"
         @close="closeApp(app.id)"
         @minimize="minimizeApp(app.id)"
         @maximize="maximizeApp(app.id)"
@@ -103,6 +32,7 @@
     
     <!-- App Registry - Componentes ocultos para auto-registro -->
     <div style="display: none;">
+      <Terminal />
       <TimeCounter />
       <SystemStatus />
       <!-- Añade aquí nuevas apps para que se auto-registren -->
@@ -127,10 +57,11 @@ import OSBar from './OS/OSBar.vue'
 import OSWindow from './OS/Window.vue'
 import Taskbar from './OS/Taskbar.vue'
 // App components
-import TimeCounter from './GUI/TimeCounter.vue'
-import SystemStatus from './GUI/SystemStatus.vue'
-import TechStackTreemap from './GUI/TechStackTreemap.vue'
-import CurrentStatus from './GUI/CurrentStatus.vue'
+import Terminal from './Apps/Terminal.vue'
+import TimeCounter from './Apps/TimeCounter.vue'
+import SystemStatus from './Apps/SystemStatus.vue'
+import TechStackTreemap from './Apps/TechStackTreemap.vue'
+import CurrentStatus from './Apps/CurrentStatus.vue'
 
 export default {
   name: 'PortfolioOS',
@@ -139,6 +70,7 @@ export default {
     OSBar,
     OSWindow,
     Taskbar,
+    Terminal,
     TimeCounter,
     SystemStatus,
     TechStackTreemap,
@@ -146,144 +78,24 @@ export default {
   },
   data() {
     return {
-      showWelcome: true,
-      isGUIMode: true,
-      showHelp: false,
-      currentCommand: '',
-      currentPrompt: 'laura@dev-portfolio:~$',
-      currentPath: '~',
-      commandHistory: [],
-      commandHistoryIndex: -1,
-      typedWelcome: '',
-      isTypingCommand: false,
-      showRealInput: false,
-      
       // OS state - Apps registradas dinámicamente
       availableApps: [], // Se llena automáticamente cuando las apps se montan
       openApps: [],
       minimizedApps: [],
-      activeAppId: 'terminal',
-
-      asciiArt: `
- ██▓     ▄▄▄       █    ██  ██▀███   ▄▄▄       ▒█████    ██████ 
-▓██▒    ▒████▄     ██  ▓██▒▓██ ▒ ██▒▒████▄    ▒██▒  ██▒▒██    ▒ 
-▒██░    ▒██  ▀█▄  ▓██  ▒██░▓██ ░▄█ ▒▒██  ▀█▄  ▒██░  ██▒░ ▓██▄   
-▒██░    ░██▄▄▄▄██ ▓▓█  ░██░▒██▀▀█▄  ░██▄▄▄▄██ ▒██   ██░  ▒   ██▒
-░██████▒ ▓█   ▓██▒▒▒█████▓ ░██▓ ▒██▒ ▓█   ▓██▒░ ████▓▒░▒██████▒▒
-░ ▒░▓  ░ ▒▒   ▓▒█░░▒▓▒ ▒ ▒ ░ ▒▓ ░▒▓░ ▒▒   ▓▒█░░ ▒░▒░▒░ ▒ ▒▓▒ ▒ ░
-░ ░ ▒  ░  ▒   ▒▒ ░░░▒░ ░ ░   ░▒ ░ ▒░  ▒   ▒▒ ░  ░ ▒ ▒░ ░ ░▒  ░ ░
-  ░ ░     ░   ▒    ░░░ ░ ░   ░░   ░   ░   ▒   ░ ░ ░ ▒  ░  ░  ░  
-    ░  ░      ░  ░   ░        ░           ░  ░    ░ ░        ░  `,
-
-      welcomeMessage: '¡Bienvenidos a mi portfolio digital! 👩‍💻\nSoy Laura, Backend Developer con interés en DevOps, IA y Frontend.\nEscribe "help" para ver comandos disponibles o usa los botones. 🚀',
-
-      availableCommands: [
-        { name: 'ls [path]', description: 'Lista archivos y directorios' },
-        { name: 'cd <path>', description: 'Cambia de directorio' },
-        { name: 'cat <file>', description: 'Muestra el contenido de un archivo' },
-        { name: 'pwd', description: 'Muestra el directorio actual' },
-        { name: 'whoami', description: 'Información sobre mí' },
-        { name: 'ps aux', description: 'Muestra mis skills/tecnologías' },
-        { name: 'history', description: 'Historial de comandos' },
-        { name: 'clear', description: 'Limpia la pantalla' },
-        { name: 'mail', description: 'Abrir formulario de contacto' },
-        { name: 'tree', description: 'Estructura del portfolio' },
-        { name: 'about', description: 'Resumen completo sobre mí' },
-        { name: 'welcome', description: 'Mensaje de bienvenida a la web' }
-      ],
-      fileSystem: {
-        '~': {
-          type: 'directory',
-          contents: {
-            'about.txt': {
-              type: 'file',
-              content: `
-      === SOBRE MÍ ===
-
-      👤 Nombre: Laura
-      🎯 Profesión: Backend Developer
-      🌟 Especialidades: Python, DevOps, IA, Frontend
-
-      📍 Ubicación: España
-      💼 Estado: Trabajando en SoftwareOne
-      🎓 Formación: Universidad de A Coruña, pero en constante aprendizaje
-
-      🔧 Backend: Python, APIs REST, Bases de datos
-      🚀 DevOps: Docker, CI/CD, Cloud
-      🤖 IA: Machine Learning, análisis de datos, LLMs
-      🎨 Frontend: JavaScript, Alpine.js, Angular, Vue.js (¡aprendiendo!)
-
-      💡 Me apasiona resolver problemas complejos y crear soluciones elegantes.
-      🌱 Siempre en búsqueda de nuevos desafíos y tecnologías.
-            ` },
-            'skills.json': {
-              type: 'file',
-              content: JSON.stringify({
-                backend: {
-                  python: 90,
-                  apis: 85,
-                  databases: 80
-                },
-                devops: {
-                  docker: 85,
-                  ci_cd: 80,
-                  cloud: 75
-                },
-                ai: {
-                  machine_learning: 50,
-                  data_analysis: 65,
-                  llms: 60
-                },
-                frontend: {
-                  vue_js: 70,
-                  javascript: 75,
-                  css: 70
-                }
-              }, null, 2)
-            },
-            'projects': {
-              type: 'directory',
-              contents: {
-                'ai-chatbot.py': { type: 'file', executable: true },
-                'api-microservice.py': { type: 'file', executable: true },
-                'devops-pipeline.yml': { type: 'file' },
-                'vue-portfolio.js': { type: 'file', executable: true }
-              }
-            },
-            'contact.sh': {
-              type: 'file',
-              executable: true,
-              content: 'script para contactar'
-            }
-          }
-        },
-        initialized: false
-      }
+      activeAppId: null
     }
   },
 
   computed: {
+    // Todas las apps abiertas (incluyendo minimizadas)
     allOpenApps() {
-      // Terminal siempre está abierta + apps del GUI
-      return [
-        {
-          id: 'terminal',
-          name: 'Terminal',
-          icon: '💻'
-        },
-        ...this.openApps
-      ];
+      return [...this.openApps, ...this.minimizedApps.map(id => 
+        this.availableApps.find(app => app.id === id)
+      ).filter(Boolean)];
     },
+    
     allAvailableApps() {
-      // Todas las apps incluyendo terminal
-      return [
-        {
-          id: 'terminal',
-          name: 'Terminal',
-          icon: '💻'
-        },
-        ...this.availableApps
-      ];
+      return this.availableApps;
     }
   },
 
@@ -292,14 +104,6 @@ export default {
       registerApp: this.registerApp,
       unregisterApp: this.unregisterApp
     };
-  },
-
-  mounted() {
-    this.addInitialCommands();
-  },
-
-  beforeUnmount() {
-    // Clean up if needed
   },
 
   methods: {
@@ -324,415 +128,13 @@ export default {
       console.log(`📱 App des-registrada: ${appId}`);
     },
     
-    addInitialCommands() {
-      if (this.initialized) return;
-      // Primero mostrar el prompt vacío
-      this.commandHistory.push({
-          prompt: 'laura@dev-portfolio:~$',
-          command: '',
-          output: ''
-      });
-      this.scrollToBottom();
-      
-      // Activar cursor de escritura
-      this.isTypingCommand = true;
-      
-      // Simular escritura del comando "welcome" letra por letra
-      const command = 'welcome';
-      let i = 0;
-      const typeCommand = () => {
-        if (i < command.length) {
-          this.commandHistory[this.commandHistory.length - 1].command = command.substring(0, i + 1);
-          i++;
-          setTimeout(typeCommand, 120); // 120ms por letra para efecto más realista
-        } else {
-          // Desactivar cursor de escritura
-          this.isTypingCommand = false;
-          
-          // Cuando termine de escribir el comando, mostrar el resultado
-          setTimeout(() => {
-            this.commandHistory[this.commandHistory.length - 1].output = this.executeWelcome();
-            this.scrollToBottom();
-            
-            // Mostrar el input real después de que termine de escribirse el welcome
-            setTimeout(() => {
-              this.showRealInput = true;
-              this.focusInput();
-            }, 800);
-          }, 300); // Pausa más corta antes de mostrar resultado
-        }
-      };
-      
-      // Empezar a escribir el comando después de una pausa
-      setTimeout(typeCommand, 600);
-    },
-
-    executeWelcome() {
-      // Crear un contenedor para el mensaje que se va escribiendo
-      const containerId = 'welcome-typing-' + Date.now();
-      
-      // Empezar con el ASCII art y un contenedor vacío para el texto
-      let welcomeHTML = `
-        <div class="welcome-output">
-          <div id="${containerId}" class="typing-welcome"></div>
-        </div>
-      `;
-      
-      // Usar setTimeout para empezar la animación después de que se renderice el HTML
-      setTimeout(() => {
-        this.typeWelcomeInOutput(containerId);
-      }, 100);
-      
-      return welcomeHTML;
-    },
-    
-    typeWelcomeInOutput(containerId) {
-      let i = 0;
-      const speed = 10;
-      let typedText = '';
-      
-      const typeWriter = () => {
-        if (i < this.welcomeMessage.length) {
-          typedText += this.welcomeMessage.charAt(i);
-          const element = document.getElementById(containerId);
-          if (element) {
-            element.innerHTML = `<span style="color: #00ff88;">${typedText.replace(/\n/g, '<br>')}</span>`;
-          }
-          i++;
-          setTimeout(typeWriter, speed);
-        } else {
-          // Cuando termine de escribirse, marcar como inicializado
-          if (!this.initialized) {
-            setTimeout(() => {
-              this.showRealInput = true;
-              this.focusInput();
-            }, 800);
-            this.initialized = true;
-          }
-        }
-      };
-      
-      typeWriter();
-    },
-
-    executeCommand() {
-      if (!this.currentCommand.trim()) return;
-
-      const command = this.currentCommand.trim();
-      this.commandHistory.push({
-        prompt: this.currentPrompt,
-        command: command,
-        output: this.processCommand(command)
-      });
-
-      this.currentCommand = '';
-      this.commandHistoryIndex = -1;
-      this.scrollToBottom();
-    },
-
-    executeQuickCommand(command) {
-      this.currentCommand = command;
-      this.executeCommand();
-    },
-
-    processCommand(command) {
-      const parts = command.split(' ');
-      const cmd = parts[0];
-      const args = parts.slice(1);
-
-      switch (cmd) {
-        case 'ls':
-          return this.listDirectory(args[0] || this.currentPath);
-        case 'cat':
-          return this.showFileContent(args[0]);
-        case 'cd':
-          return this.changeDirectory(args[0]);
-        case 'pwd':
-          return this.currentPath;
-        case 'whoami':
-          return 'laura\nBackend Developer | DevOps Enthusiast | IA Explorer | Frontend Beginner';
-        case 'clear':
-          this.commandHistory = [];
-          return ''
-        case 'help':
-          return {
-            type: 'component',
-            component: 'HelpPanel',
-            props: { availableCommands: this.availableCommands }
-          };
-        case 'ps':
-          return this.showProcesses();
-        case 'neofetch':
-        case 'about':
-          return this.executeNeofetch();
-        case 'tree':
-          return this.showTree();
-        case 'history':
-          return this.showHistory();
-        case 'mail':
-          this.$emit('navigate-to', 'contact');
-          return 'Abriendo formulario de contacto... 📧';
-        case 'welcome':
-          return this.executeWelcome();
-        default:
-          return `bash: ${cmd}: command not found\nEscribe 'help' para ver comandos disponibles.`;
-      }
-    },
-
-    listDirectory(path = this.currentPath) {
-      const dir = this.getDirectory(path);
-      if (!dir) return `ls: cannot access '${path}': No such file or directory`;
-
-      let output = '';
-      for (const [name, item] of Object.entries(dir.contents)) {
-        const prefix = item.type === 'directory' ? 'd' : '-';
-        const executable = item.executable ? '*' : ' ';
-        const color = item.type === 'directory' ? 'blue' : (item.executable ? 'green' : 'white');
-        output += `${prefix}rwxr-xr-x 1 laura laura 4096 Nov 14 2025 <span style="color: ${color}">${name}${executable}</span>\n`;
-      }
-      return output;
-    },
-
-    showFileContent(filename) {
-      if (!filename) return 'cat: missing file operand';
-
-      const file = this.getFile(filename);
-      if (!file) return `cat: ${filename}: No such file or directory`;
-
-      if (file.type === 'directory') return `cat: ${filename}: Is a directory`;
-
-      return file.content || `Content of ${filename}`;
-    },
-
-    executeNeofetch() {
-      return `<div class="system-info">
-<span style="color: #00ff88; font-weight: bold;">╭─ LAURA DEV PORTFOLIO ─────────────────────────────────────╮</span>
-<span style="color: #00ff88;">│</span> <span style="color: #ffbd2e;">👤 Desarrolladora:</span> <span style="color: #fff;">Laura</span>                                    <span style="color: #00ff88;">│</span>
-<span style="color: #00ff88;">│</span> <span style="color: #ffbd2e;">🎯 Especialidad:</span>  <span style="color: #fff;">Backend Developer</span>                        <span style="color: #00ff88;">│</span>
-<span style="color: #00ff88;">│</span> <span style="color: #ffbd2e;">📍 Ubicación:</span>     <span style="color: #fff;">España</span>                                   <span style="color: #00ff88;">│</span>
-<span style="color: #00ff88;">│</span> <span style="color: #ffbd2e;">💼 Estado:</span>        <span style="color: #4caf50;">Disponible para proyectos</span>             <span style="color: #00ff88;">│</span>
-<span style="color: #00ff88;">├─ STACK PRINCIPAL ─────────────────────────────────────────┤</span>
-<span style="color: #00ff88;">│</span> <span style="color: #007bff;">🐍 Backend:</span>       <span style="color: #fff;">Python, Django, FastAPI, PostgreSQL</span>     <span style="color: #00ff88;">│</span>
-<span style="color: #00ff88;">│</span> <span style="color: #007bff;">🚀 DevOps:</span>        <span style="color: #fff;">Docker, GitHub Actions, CI/CD, AWS</span>       <span style="color: #00ff88;">│</span>
-<span style="color: #00ff88;">│</span> <span style="color: #007bff;">🤖 IA & Data:</span>     <span style="color: #fff;">Machine Learning, Data Analysis, LLMs</span>   <span style="color: #00ff88;">│</span>
-<span style="color: #00ff88;">│</span> <span style="color: #007bff;">🎨 Frontend:</span>      <span style="color: #fff;">Vue.js, JavaScript, CSS (aprendiendo!)</span>  <span style="color: #00ff88;">│</span>
-<span style="color: #00ff88;">├─ EXPERIENCIA ─────────────────────────────────────────────┤</span>
-<span style="color: #00ff88;">│</span> <span style="color: #ff9800;">🎓 Formación:</span>        <span style="color: #fff;">Autodidacta y en constante aprendizaje</span> <span style="color: #00ff88;">│</span>
-<span style="color: #00ff88;">│</span> <span style="color: #ff9800;">🔥 Pasión:</span>           <span style="color: #fff;">Resolver problemas complejos</span>           <span style="color: #00ff88;">│</span>
-<span style="color: #00ff88;">╰───────────────────────────────────────────────────────────╯</span>
-
-<span style="color: #888; font-style: italic;">💡 Tip: Usa 'cat about.txt' para más detalles o 'ps aux' para ver skills</span>
-</div>`;
-    },
-
-    showProcesses() {
-      return `
-    USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME  COMMAND
-    laura     1001 85.2  15.3  2048  1024 pts/0    R+   09:00   2:30  python
-    laura     1002 75.0  12.1  1536   768 pts/1    S    09:15   1:45  docker
-    laura     1003 68.3  10.2  1280   512 pts/2    S    09:30   1:20  vue
-    laura     1004 45.1   8.4  1024   256 pts/3    S    10:00   0:45  devops
-    laura     1005 32.7   6.1   768   128 pts/4    S    10:30   0:30  ai-ml
-      `;
-    },
-
-    showTree() {
-      return `
-    📁 laura@dev-portfolio:~
-    ├── 📄 about.txt
-    ├── 📄 skills.json
-    ├── 📄 contact.sh*
-    └── 📁 projects/
-    ├── 🐍 ai-chatbot.py*
-    ├── 🐍 api-microservice.py*
-    ├── 📄 devops-pipeline.yml
-    └── 🟨 vue-portfolio.js*
-
-    1 directory, 6 files
-      `;
-    },
-
-    showHistory() {
-      return this.commandHistory.map((entry, index) => 
-        `${index + 1}  ${entry.command}`
-      ).join('\n');
-    },
-
-    changeDirectory(path) {
-      if (!path) {
-        // cd sin argumentos va al home
-        this.currentPath = '~';
-        this.currentPrompt = 'laura@dev-portfolio:~$';
-        return '';
-      }
-
-      // Manejar paths relativos y absolutos
-      let targetPath = path;
-      
-      // cd .. (subir un nivel)
-      if (path === '..') {
-        if (this.currentPath === '~') {
-          return 'cd: ..: Permission denied';
-        }
-        this.currentPath = '~';
-        this.currentPrompt = 'laura@dev-portfolio:~$';
-        return '';
-      }
-      
-      // cd . (directorio actual)
-      if (path === '.') {
-        return '';
-      }
-      
-      // Rutas relativas desde ~
-      if (!path.startsWith('~') && !path.startsWith('/')) {
-        targetPath = `~/${path}`;
-      }
-      
-      // Normalizar la ruta (eliminar / al final si existe)
-      targetPath = targetPath.replace(/\/$/, '');
-      
-      // Verificar si el directorio existe
-      const dir = this.getDirectory(targetPath);
-      
-      if (!dir) {
-        return `cd: ${path}: No such file or directory`;
-      }
-      
-      if (dir.type !== 'directory') {
-        return `cd: ${path}: Not a directory`;
-      }
-      
-      // Cambiar al directorio
-      this.currentPath = targetPath;
-      
-      // Actualizar el prompt
-      const displayPath = targetPath === '~' ? '~' : targetPath.replace('~/', '~/');
-      this.currentPrompt = `laura@dev-portfolio:${displayPath}$`;
-      
-      return '';
-    },
-
-    getDirectory(path) { 
-      // Normalizar la ruta
-      if (!path || path === '~') {
-        return this.fileSystem['~'];
-      }
-      
-      // Si es una ruta relativa, convertirla a absoluta
-      if (!path.startsWith('~')) {
-        path = `~/${path}`;
-      }
-      
-      // Eliminar / al final
-      path = path.replace(/\/$/, '');
-      
-      // Si es el home
-      if (path === '~') {
-        return this.fileSystem['~'];
-      }
-      
-      // Si es un subdirectorio
-      const parts = path.split('/');
-      if (parts[0] === '~' && parts.length === 2) {
-        const dirName = parts[1];
-        const homeContents = this.fileSystem['~'].contents;
-        if (homeContents[dirName] && homeContents[dirName].type === 'directory') {
-          return homeContents[dirName];
-        }
-      }
-      
-      return null;
-    },
-
-    getFile(filename) {
-      const currentDir = this.getDirectory(this.currentPath);
-      return currentDir?.contents?.[filename];
-    },
-
-    autocomplete() {
-      const commands = this.availableCommands.map(cmd => cmd.name.split(' ')[0]);
-      const matches = commands.filter(cmd => cmd.startsWith(this.currentCommand));
-      if (matches.length === 1) {
-        this.currentCommand = matches[0];
-      }
-    },
-
-    previousCommand() {
-      if (this.commandHistoryIndex < this.commandHistory.length - 1) {
-        this.commandHistoryIndex++;
-        this.currentCommand = this.commandHistory[this.commandHistory.length - 1 - this.commandHistoryIndex].command;
-      }
-    },
-
-    nextCommand() {
-      if (this.commandHistoryIndex > 0) {
-        this.commandHistoryIndex--;
-        this.currentCommand = this.commandHistory[this.commandHistory.length - 1 - this.commandHistoryIndex].command;
-      } else if (this.commandHistoryIndex === 0) {
-        this.commandHistoryIndex = -1;
-        this.currentCommand = '';
-      }
-    },
-
-    showHelpMessage() {
-      let helpContent = '';
-      for (const cmd of this.availableCommands) {
-        helpContent += `<code>${cmd.name}</code> - ${cmd.description}\n`;
-      };
-
-      return `
-      <div v-if="showHelp" class="help-panel">
-        <h3>📖 Comandos Disponibles:</h3>
-        <pre>${helpContent}</pre>
-      </div>`;
-    },
-
-    toggleHelp() { 
-      this.commandHistory.push({
-        prompt: this.currentPrompt,
-        command: 'help',
-        output: this.processCommand('help')
-      });
-      
-      this.scrollToBottom();
-      this.focusInput();
-    },
-
-    toggleGUIMode() { this.isGUIMode = !this.isGUIMode; },
-
-    focusInput() {
-      this.$nextTick(() => { this.$refs.commandInput?.focus(); });
-    },
-
-    scrollToBottom() {
-      this.$nextTick(() => {
-        const content = this.$refs.terminalContent;
-        content.scrollTop = content.scrollHeight;
-      });
-    },
-    
-    formatOutput(output) {
-      // Si es un bloque HTML completo (div, pre, etc.), no lo toques
-      if (typeof output === 'string' && (
-          output.trim().startsWith('<div') ||
-          output.trim().startsWith('<pre')
-        )) {
-        return output;
-      }
-      // Para cualquier otro caso (incluye <span>), convierte \n en <br>
-      return output.replace(/\n/g, '<br>');
-    },
-    
-    // OS methods
+    // Window Management Methods
     closeApp(appId) {
       this.openApps = this.openApps.filter(app => app.id !== appId);
       this.minimizedApps = this.minimizedApps.filter(id => id !== appId);
     },
     
     minimizeApp(appId) {
-      if (appId === 'terminal') return; // No minimizar terminal
-      
       // Añadir a minimizados si no está ya
       if (!this.minimizedApps.includes(appId)) {
         this.minimizedApps.push(appId);
@@ -740,38 +142,34 @@ export default {
       
       // Quitar de la vista
       this.openApps = this.openApps.filter(app => app.id !== appId);
-      
-      // Si era la app activa, cambiar a terminal
-      if (this.activeAppId === appId) {
-        this.activeAppId = 'terminal';
-      }
     },
     
     restoreApp(appId) {
-      // Buscar la app en la lista de disponibles
+      // Buscar la app en availableApps
       const app = this.availableApps.find(a => a.id === appId);
+      if (!app) return;
       
-      if (app && !this.openApps.find(a => a.id === appId)) {
-        // Añadir a apps abiertas
+      // Quitar de minimizados
+      this.minimizedApps = this.minimizedApps.filter(id => id !== appId);
+      
+      // Añadir a openApps si no está
+      if (!this.openApps.find(a => a.id === appId)) {
         this.openApps.push(app);
-        
-        // Quitar de minimizados
-        this.minimizedApps = this.minimizedApps.filter(id => id !== appId);
-        
-        // Hacer foco en la app restaurada
-        this.focusApp(appId);
       }
+      
+      // Enfocar
+      this.focusApp(appId);
     },
     
     maximizeApp(appId) {
-      // TODO: Implementar lógica de maximizar
+      // TODO: Implementar maximizar
       console.log('Maximize app:', appId);
     },
     
     focusApp(appId) {
       this.activeAppId = appId;
       
-      // Si el app está minimizada, restaurarla
+      // Si está minimizada, restaurarla
       if (this.minimizedApps.includes(appId)) {
         this.restoreApp(appId);
       }
@@ -785,12 +183,12 @@ export default {
     // Window positioning
     getAppInitialX(index) {
       // Posicionar apps en cascada
-      return 700 + (index * 40);
+      return 50 + (index * 40);
     },
     
     getAppInitialY(index) {
       // Posicionar apps en cascada
-      return 100 + (index * 40);
+      return 20 + (index * 40);
     }
   }
 }
@@ -823,8 +221,7 @@ export default {
   --widget-border: 1px solid var(--border-color);
   --widget-border-radius: 8px;
   --widget-padding: 20px;
-  --widget-margin: 20px;
-  --widget-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --widget-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   
   /* Title styles */
   --title-color: var(--primary-color);
@@ -833,19 +230,12 @@ export default {
   --title-border: 1px solid var(--border-color);
 }
 
-/* Main Desktop Area */
 .desktop-area {
   flex: 1;
   position: relative;
   overflow: hidden;
   margin-bottom: 50px; /* Espacio para la taskbar fija */
   background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
-}
-
-/* Terminal Window */
-.terminal-window {
-  min-height: 500px;
-  max-height: calc(100vh - 120px);
 }
 
 /* App Windows - Se adaptan al contenido */
@@ -861,140 +251,8 @@ export default {
 
 .terminal-window {
   z-index: 2;
-}
-
-/* Terminal Content Styles */
-.terminal-content {
-  padding: 20px;
-  flex: 1;
-  overflow-y: auto;
-  background: #0a0a0a;
-}
-
-.ascii-art {
-  color: #00ff88;
-  font-size: 12px;
-  line-height: 1.2;
-  margin-bottom: 20px;
-  text-align: center;
-}
-
-.welcome-text {
-  color: #888;
-  margin: 10px 0;
-  line-height: 1.6;
-}
-
-.typing-text {
-  color: #00ff88;
-}
-
-.command-history {
-  margin-bottom: 20px;
-}
-
-.command-entry {
-  margin-bottom: 15px;
-}
-
-.command-line {
-  color: #fff;
-  margin-bottom: 5px !important;
-}
-
-.prompt {
-  color: #00ff88;
-  user-select: none;
-}
-
-.command {
-  color: #ffbd2e;
-  margin-left: 5px !important;
-}
-
-.typing-cursor {
-  color: #00ff88;
-  animation: blink 1s infinite;
-}
-
-@keyframes blink {
-  0%, 50% { opacity: 1; }
-  51%, 100% { opacity: 0; }
-}
-
-.command-output {
-  color: #ccc;
-  margin: 20px 0 !important;
-  font-family: inherit;
-  line-height: 1.4;
-}
-
-.input-line {
-  display: flex;
-  align-items: center;
-  margin-bottom: 20px;
-  animation: fadeIn 0.5s ease-in;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.command-input {
-  background: transparent;
-  border: none;
-  color: #ffbd2e;
-  font-family: inherit;
-  font-size: 16px;
-  outline: none;
-  flex: 1;
-  margin-left: 5px !important;
-}
-
-.command-input::placeholder {
-  color: #666;
-}
-
-.quick-actions {
-  display: flex;
-  flex-direction: row;
-  gap: 10px;
-  margin: 20px 0;
-  padding: 15px;
-  background: rgba(0, 255, 136, 0.05);
-  border: 1px solid rgba(0, 255, 136, 0.2);
-  border-radius: 6px;
-}
-
-.quick-btn {
-  flex: 1 1 0;
-  width: 100%;
-  background: rgba(0, 255, 136, 0.1);
-  border: 1px solid rgba(0, 255, 136, 0.3);
-  color: #00ff88;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 12px;
-  transition: all 0.3s;
-  text-align: center;
-}
-
-.quick-btn:hover {
-  background: rgba(0, 255, 136, 0.2);
-  transform: translateY(-1px);
-}
-
-.neofetch, .system-info {
-  font-family: monospace;
-  font-size: 11px;
-  line-height: 1.4;
-  background: rgba(0, 255, 136, 0.03);
-  padding: 10px;
-  border-radius: 4px;
-  border-left: 3px solid #00ff88;
+  min-height: 500px;
+  max-height: calc(100vh - 120px);
 }
 
 /* Responsive */
@@ -1012,46 +270,5 @@ export default {
   .terminal-window {
     min-height: 300px;
   }
-  
-  .terminal-content {
-    overflow-y: auto;
-    padding: 10px;
-  }
-  
-  .ascii-art {
-    font-size: 8px;
-  }
-  
-  .quick-actions {
-    flex-direction: column;
-  }
-}
-
-/* Scrollbar personalizada */
-.terminal-content::-webkit-scrollbar {
-  width: 8px;
-}
-
-.terminal-content::-webkit-scrollbar-track {
-  background: #1e1e1e;
-}
-
-.terminal-content::-webkit-scrollbar-thumb {
-  background: #444;
-  border-radius: 4px;
-}
-
-.terminal-content::-webkit-scrollbar-thumb:hover {
-  background: #666;
-}
-
-/* Estilos para el welcome output */
-.welcome-output {
-  margin: 0;
-}
-
-.typing-welcome {
-  color: #00ff88;
-  line-height: 1.4;
 }
 </style>

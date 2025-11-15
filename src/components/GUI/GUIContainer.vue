@@ -29,10 +29,10 @@
 </template>
 
 <script>
-import TimeCounter from './TimeCounter.vue'
-import TechStackTreemap from './TechStackTreemap.vue'
-import SystemStatus from './SystemStatus.vue'
-import CurrentStatus from './CurrentStatus.vue'
+import TimeCounter from '../Apps/TimeCounter.vue'
+import TechStackTreemap from '../Apps/TechStackTreemap.vue'
+import SystemStatus from '../Apps/SystemStatus.vue'
+import CurrentStatus from '../Apps/CurrentStatus.vue'
 import OSWindow from '../OS/Window.vue'
 
 export default {
